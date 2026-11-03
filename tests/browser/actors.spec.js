@@ -1,5 +1,122 @@
 import { test, expect } from "@playwright/test";
 
+test("features use compact cards, saved choices and readable current-level tables", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1050 });
+  await page.goto("/");
+  await project(page);
+  await page.locator('[data-open-tool="Characters"]').click();
+  await page.locator('[data-create-actor="character"]').click();
+  const dialog = page.locator("#dialog");
+  await dialog.getByLabel("Name", { exact: true }).fill("Rowan");
+  await dialog.getByLabel("Class", { exact: true }).selectOption("Monk");
+  await dialog
+    .getByLabel("Species / ancestry", { exact: true })
+    .selectOption("Human");
+  await dialog.getByRole("button", { name: "Create", exact: true }).click();
+  const form = page.locator("[data-edit-actor]");
+  const features = form.locator("[data-feature-section]");
+  await features.locator(":scope > summary").click();
+  await expect(features.locator(".feature-card-body:visible")).toHaveCount(0);
+  await expect(features).not.toContainText("Fiendish");
+  const card = (name) =>
+    features.locator(".feature-card").filter({
+      has: page.locator(":scope > summary > span", {
+        hasText: new RegExp("^" + name + "$"),
+      }),
+    });
+  await card("Class skills").locator(":scope > summary").click();
+  await features
+    .getByLabel("Class skills 1", { exact: true })
+    .selectOption("Acrobatics");
+  await features
+    .getByLabel("Class skills 2", { exact: true })
+    .selectOption("Athletics");
+  await expect(
+    features
+      .getByLabel("Class skills 2", { exact: true })
+      .locator("option[value=Acrobatics]"),
+  ).toHaveAttribute("disabled", "");
+  await card("Origin feat").locator(":scope > summary").click();
+  await features
+    .getByLabel("Origin feat", { exact: true })
+    .selectOption("Skilled");
+  await card("Skilled proficiency").locator(":scope > summary").click();
+  await features
+    .getByLabel("Skilled proficiency 1", { exact: true })
+    .selectOption("Deception");
+  await features
+    .getByLabel("Skilled proficiency 2", { exact: true })
+    .selectOption("History");
+  await features
+    .getByLabel("Skilled proficiency 3", { exact: true })
+    .selectOption("__custom");
+  await features
+    .getByLabel("Custom skilled proficiency 3", { exact: true })
+    .fill("Cartographer’s tools");
+  await features
+    .getByLabel("Custom skilled proficiency 3", { exact: true })
+    .press("Tab");
+  await form.getByRole("button", { name: "Save", exact: true }).click();
+  await page.reload();
+  await features.locator(":scope > summary").click();
+  await card("Class skills").locator(":scope > summary").click();
+  await expect(
+    features.getByLabel("Class skills 1", { exact: true }),
+  ).toHaveValue("Acrobatics");
+  await card("Skilled proficiency").locator(":scope > summary").click();
+  await expect(
+    features.getByLabel("Custom skilled proficiency 3", { exact: true }),
+  ).toHaveValue("Cartographer’s tools");
+  const martial = card("Level 1: Martial Arts");
+  await martial.locator(":scope > summary").click();
+  await expect(martial.locator("table").first().locator("th")).toHaveText([
+    "Level",
+    "Martial Arts die",
+    "Focus Points",
+    "Extra movement",
+  ]);
+  await expect(
+    martial.locator("table").first().locator("tbody tr"),
+  ).toHaveCount(1);
+  await expect(martial.locator("table").first()).toContainText("1d6");
+  await martial.getByText("All levels", { exact: true }).click();
+  await expect(martial.locator("table").nth(1).locator("tbody tr")).toHaveCount(
+    20,
+  );
+  await martial.getByText("All levels", { exact: true }).click();
+  await page.screenshot({
+    path: "artifacts/character-feature-cards.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  await form
+    .getByRole("button", { name: "Add to encounter", exact: true })
+    .click();
+  await page.getByText("Character / monster details", { exact: true }).click();
+  await page
+    .locator(".participant-editor .feature-card")
+    .filter({
+      has: page.locator(":scope > summary > span", {
+        hasText: /^Class skills$/,
+      }),
+    })
+    .locator(":scope > summary")
+    .click();
+  await expect(page.locator(".participant-editor .choice-value")).toContainText(
+    ["Class skills 1Acrobatics", "Class skills 2Athletics"],
+  );
+  await expect(
+    page.locator(".participant-editor [data-feature-choice-input]"),
+  ).toHaveCount(0);
+});
+
 test("class and species choices fill level-aware features, preserve notes and allow homebrew", async ({
   page,
 }) => {
@@ -15,12 +132,10 @@ test("class and species choices fill level-aware features, preserve notes and al
     .selectOption("Elf");
   await dialog.getByRole("button", { name: "Create", exact: true }).click();
   const form = page.locator("[data-edit-actor]");
-  const generated = form
-    .locator("details")
-    .filter({
-      has: page.locator("summary", { hasText: /^Class \/ species features$/ }),
-    });
-  await generated.locator("summary").click();
+  const generated = form.locator("details").filter({
+    has: page.locator("summary", { hasText: /^Class \/ species features$/ }),
+  });
+  await generated.locator(":scope > summary").click();
   await expect(generated).toContainText("Second Wind");
   await expect(generated).toContainText("Darkvision");
   await expect(generated).not.toContainText("Level 2: Action Surge");

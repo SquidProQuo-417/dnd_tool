@@ -1,4 +1,5 @@
 import { characterOptions } from "./character-options.js";
+import { readFeatureChoices } from "./character-features.js";
 
 export function characterFields(r, esc) {
   const edition = r.rulesEdition || "2024";
@@ -54,6 +55,7 @@ export function readCharacterChoices(data, out) {
           : data.get(key + "Choice");
     }
   }
+  readFeatureChoices(data, out);
   return applyCharacterOptions(out);
 }
 

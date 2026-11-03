@@ -4,6 +4,8 @@ import {
   bindCharacterChoices,
 } from "./character-builder.js";
 import { ActorStore } from "./actors-store.js";
+import { renderCharacterFeatures } from "./character-features.js";
+import { renderReference } from "./rule-content.js";
 import {
   abilityNames,
   createActor,
@@ -109,7 +111,7 @@ export class ActorsUI {
       pdf = this.pdfs.get(record.sheetId);
     if (record.sheetId && this.preview.has(record.id) && !pdf)
       this.loadPdf(record);
-    return `<form class="actor-form" data-edit-actor="${record.id}" data-edit-kind="${record.kind}"><div class="actor-editor-toolbar"><button class="primary" type="submit">Save</button><span class="actor-save-state" role="status">${this.drafts.has(record.id) ? "Unsaved" : "Saved"}</span><button class="secondary" type="button" data-add-actor="${record.id}">Add to encounter</button><button class="text-btn danger" type="button" data-delete-actor="${record.id}">Delete</button></div>${this.input("name", "Name", r.name)}<div class="actor-basic-grid">${this.input("maxHp", "Maximum HP", r.maxHp, "number", 1)}${this.input("ac", "AC", r.ac, "number", 0, 100)}${this.input("initiative", "Initiative modifier", r.initiative, "number", -100, 100)}${this.input("speed", "Speed", r.speed)}</div>${record.kind === "character" ? `<details class="actor-section" open><summary>Character</summary>${characterFields(r, esc)}</details>` : ""}${record.kind === "character" && r.generatedFeatures ? `<details class="actor-section"><summary>Class / species features</summary><div class="actor-text">${esc(r.generatedFeatures)}</div><a href="./rules/ATTRIBUTION.txt" target="_blank" rel="noopener">SRD sources</a></details>` : ""}<details class="actor-section" open><summary>Ability modifiers</summary>${this.abilities(r.abilities)}</details>${[
+    return `<form class="actor-form" data-edit-actor="${record.id}" data-edit-kind="${record.kind}"><div class="actor-editor-toolbar"><button class="primary" type="submit">Save</button><span class="actor-save-state" role="status">${this.drafts.has(record.id) ? "Unsaved" : "Saved"}</span><button class="secondary" type="button" data-add-actor="${record.id}">Add to encounter</button><button class="text-btn danger" type="button" data-delete-actor="${record.id}">Delete</button></div>${this.input("name", "Name", r.name)}<div class="actor-basic-grid">${this.input("maxHp", "Maximum HP", r.maxHp, "number", 1)}${this.input("ac", "AC", r.ac, "number", 0, 100)}${this.input("initiative", "Initiative modifier", r.initiative, "number", -100, 100)}${this.input("speed", "Speed", r.speed)}</div>${record.kind === "character" ? `<details class="actor-section" open><summary>Character</summary>${characterFields(r, esc)}</details>` : ""}${record.kind === "character" && renderCharacterFeatures(r, esc) ? `<details class="actor-section" data-feature-section><summary>Class / species features</summary>${renderCharacterFeatures(r, esc)}</details>` : ""}<details class="actor-section" open><summary>Ability modifiers</summary>${this.abilities(r.abilities)}</details>${[
       ["saves", "Saving throws"],
       ["skills", "Skills"],
       ["attacks", "Weapons / attacks"],
@@ -353,15 +355,17 @@ export class ActorsUI {
             ["Saving throws", selected.snapshot.saves],
             ["Skills", selected.snapshot.skills],
             ["Weapons / attacks", selected.snapshot.attacks],
-            ["Class / species features", selected.snapshot.generatedFeatures],
+
             ["Features", selected.snapshot.features],
           ]
             .filter(([, value]) => value)
             .map(
               ([label, value]) =>
-                `<details class="actor-section"><summary>${label}</summary><div class="actor-text">${esc(value)}</div></details>`,
+                `<details class="actor-section"><summary>${label}</summary><div class="actor-text">${renderReference(value, esc, selected.snapshot.source || {})}</div></details>`,
             )
-            .join("")}</details>`
+            .join(
+              "",
+            )}${selected.snapshot.kind === "character" ? renderCharacterFeatures(selected.snapshot, esc, { readonly: true }) : ""}</details>`
         : ""
     }</div></div></section>`;
   }
@@ -421,6 +425,31 @@ export class ActorsUI {
           this.drafts.set(record.id, next);
           this.render();
         });
+      const bindFeatures = () => {
+        form
+          .querySelectorAll("[data-feature-choice-input]")
+          .forEach((input) => {
+            const update = () => {
+              const open = new Set(
+                [...form.querySelectorAll("[data-feature-id][open]")].map(
+                  (d) => d.dataset.featureId,
+                ),
+              );
+              const next = this.readForm(form, record);
+              this.drafts.set(record.id, next);
+              const host = form.querySelector("[data-character-features]");
+              if (host)
+                host.outerHTML = renderCharacterFeatures(next, this.esc);
+              form
+                .querySelectorAll("[data-feature-id]")
+                .forEach((d) => (d.open = open.has(d.dataset.featureId)));
+              form.querySelector(".actor-save-state").textContent = "Unsaved";
+              bindFeatures();
+            };
+            input.onchange = update;
+          });
+      };
+      bindFeatures();
       form.onsubmit = async (e) => {
         e.preventDefault();
         try {

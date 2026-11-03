@@ -17,6 +17,7 @@ export function createActor(kind, values = {}) {
     level: 1,
     rulesEdition: "2024",
     generatedFeatures: "",
+    featureChoices: {},
     className: "",
     ancestry: "",
     abilities: Object.fromEntries(abilityNames.map((a) => [a, 0])),
@@ -66,6 +67,27 @@ export function validateActor(r) {
     throw Error("Invalid rules edition.");
   if (r.generatedFeatures !== undefined && !text(r.generatedFeatures, 500000))
     throw Error("Invalid generated features.");
+  if (r.featureChoices !== undefined) {
+    if (
+      !r.featureChoices ||
+      Array.isArray(r.featureChoices) ||
+      typeof r.featureChoices !== "object" ||
+      Object.keys(r.featureChoices).length > 500
+    )
+      throw Error("Invalid feature choices.");
+    for (const [key, values] of Object.entries(r.featureChoices)) {
+      if (
+        !text(key, 300) ||
+        !Array.isArray(values) ||
+        values.length > 20 ||
+        !values.every((v) => text(v, 207))
+      )
+        throw Error("Invalid feature choices.");
+      const selected = values.filter((v) => v && v !== "custom:");
+      if (new Set(selected).size !== selected.length)
+        throw Error("Choose different options for each selection.");
+    }
+  }
   if (r.sheetId !== null && !safeId(r.sheetId))
     throw Error("Invalid PDF reference.");
   if (

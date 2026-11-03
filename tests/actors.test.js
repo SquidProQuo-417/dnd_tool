@@ -3,6 +3,107 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { characterOptions } from "../dist/character-options.js";
 import { applyCharacterOptions } from "../dist/character-builder.js";
+import {
+  featureChoices,
+  characterFeatureCards,
+  readFeatureChoices,
+} from "../dist/character-features.js";
+import { referenceBlocks, renderReference } from "../dist/rule-content.js";
+
+test("feature cards keep species data separate and cover all catalog options", () => {
+  const human = characterOptions["2024"].species.find(
+    (s) => s.name === "Human",
+  );
+  const gnome = characterOptions["2024"].species.find(
+    (s) => s.name === "Gnome",
+  );
+  assert.doesNotMatch(JSON.stringify(human), /Fiendish|Poison Spray/);
+  assert.doesNotMatch(JSON.stringify(gnome), /Faerie Fire|Pass without Trace/);
+  assert.match(
+    JSON.stringify(
+      characterOptions["2024"].species.find((s) => s.name === "Elf"),
+    ),
+    /Faerie Fire/,
+  );
+  assert.match(
+    JSON.stringify(
+      characterOptions["2024"].species.find((s) => s.name === "Tiefling"),
+    ),
+    /Chthonic/,
+  );
+  for (const edition of ["2014", "2024"])
+    for (const cls of characterOptions[edition].classes)
+      for (const species of characterOptions[edition].species) {
+        const r = createActor("character", {
+          name: "Test",
+          rulesEdition: edition,
+          className: cls.name,
+          ancestry: species.name,
+          level: 20,
+        });
+        assert.ok(characterFeatureCards(r).length);
+        const choices = featureChoices(r);
+        assert.equal(new Set(choices.map((c) => c.key)).size, choices.length);
+        assert.ok(
+          choices.every(
+            (c) =>
+              c.count >= 1 &&
+              c.count <= 20 &&
+              new Set(c.options).size === c.options.length,
+          ),
+        );
+      }
+});
+
+test("parent-dependent choices read in one save and remain independent in encounters", () => {
+  const r = createActor("character", { name: "Test", ancestry: "Human" });
+  const data = new FormData();
+  const origin = "2024:species:Human:origin-feat",
+    skilled = "2024:species:Human:skilled-options";
+  data.set("feature-choice:" + origin + ":0", "Skilled");
+  ["Arcana", "Nature", "__custom"].forEach((v, i) =>
+    data.set("feature-choice:" + skilled + ":" + i, v),
+  );
+  data.set("feature-custom:" + skilled + ":2", "Smith’s tools");
+  readFeatureChoices(data, r);
+  assert.deepEqual(r.featureChoices[skilled], [
+    "Arcana",
+    "Nature",
+    "custom:Smith’s tools",
+  ]);
+  validateActor(r);
+  const d = emptyActors(),
+    p = addParticipant(d, r);
+  r.featureChoices[skilled][0] = "History";
+  assert.equal(p.snapshot.featureChoices[skilled][0], "Arcana");
+  r.featureChoices[skilled] = ["Arcana", "Arcana"];
+  assert.throws(() => validateActor(r), /different options/);
+});
+
+test("reference tables have semantic headers and ambiguous extraction uses a source link", () => {
+  const blocks = referenceBlocks(
+    "Lineage\tBenefit\nDrow\tDarkvision\nHigh Elf\tCantrip",
+  );
+  assert.deepEqual(blocks[0].headers, ["Lineage", "Benefit"]);
+  assert.equal(blocks[0].rows.length, 2);
+  const esc = (s) =>
+    String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+  const html = renderReference(
+    "Name\tBenefit\nA\t<script>alert(1)</script>",
+    esc,
+  );
+  assert.match(html, /<th scope="col">Name/);
+  assert.doesNotMatch(html, /<script>/);
+  const malformed = renderReference("Name\tA\tB\nOops\tUnknown", esc, {
+    edition: "2014",
+    page: 10,
+  });
+  assert.match(malformed, /View source table/);
+  assert.doesNotMatch(malformed, /Oops/);
+});
 
 test("edition-specific character options gate features by level without changing custom stats", () => {
   for (const edition of ["2014", "2024"]) {

@@ -10,7 +10,7 @@
     "build:rules": "node scripts/build-rules.mjs",
     "test:browser": "playwright test",
     "format": "prettier --write dist scripts tests docs README.md package.json playwright.config.js",
-    "check": "node --check dist/shell.js && node --check dist/sw.js && node --check dist/workspace-model.js && node --check dist/workspace-ui.js && node --check dist/actors-model.js && node --check dist/actors-store.js && node --check dist/actors-ui.js && node --check dist/character-builder.js",
+    "check": "node --check dist/shell.js && node --check dist/sw.js && node --check dist/workspace-model.js && node --check dist/workspace-ui.js && node --check dist/actors-model.js && node --check dist/actors-store.js && node --check dist/actors-ui.js && node --check dist/character-builder.js && node --check dist/character-features.js && node --check dist/rule-content.js",
     "build:characters": "node scripts/build-character-options.mjs"
   },
   "devDependencies": {

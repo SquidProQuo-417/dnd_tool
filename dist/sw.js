@@ -1,4 +1,4 @@
-const CACHE = "waypoint-shell-v3";
+const CACHE = "waypoint-shell-v4";
 const FILES = [
   "./",
   "./index.html",
@@ -10,6 +10,8 @@ const FILES = [
   "./actors-ui.js",
   "./character-options.js",
   "./character-builder.js",
+  "./character-features.js",
+  "./rule-content.js",
   "./presets/monsters-2014.json",
   "./presets/monsters-2024.json",
   "./rules/ATTRIBUTION.txt",
