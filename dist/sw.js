@@ -1,4 +1,4 @@
-const CACHE = "waypoint-v3";
+const CACHE = "waypoint-v4";
 const FILES = [
   "./",
   "./index.html",
@@ -9,6 +9,8 @@ const FILES = [
   "./roadmap.js",
   "./rules-ui.js",
   "./rules-model.js",
+  "./workspace-model.js",
+  "./workspace-ui.js",
   "./rules/2014.json",
   "./rules/2024.json",
   "./rules/srd-2014.pdf",

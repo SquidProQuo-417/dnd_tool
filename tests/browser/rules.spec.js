@@ -117,6 +117,7 @@ test("rules navigation fits laptop widths and the reference can be read", async 
       ),
       `page overflow at ${width}`,
     ).toBe(false);
+    if (width === 390) await expect(page.locator("#rule-search")).toBeHidden();
   }
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.screenshot({

@@ -17,9 +17,9 @@ A local-first, installable D&D preparation workspace. DM preparation is the firs
 
 1. Preparation foundation: campaigns, portable project files, notes, reusable modular characters, image cards, connected board, local persistence and recovery.
 2. Rules: curated permitted content with source attribution, hierarchy, search, homebrew, independent edition selection. Never present a partial library as a complete rulebook.
-3. Session: dice, initiative, encounter-local resource state, manual combat and grid.
-4. Workspace: advanced docking, external windows, saved layout variants and expanded appearance options.
-5. Player reference, more board views, generators, custom creators, mobile improvements; optional dice minigame last.
+3. Workspace foundation (moved ahead of combat): tabs, docked splits, resizing, panel priorities, hide/restore, named layouts and recovery.
+4. Session: initiative, encounter-local resource state, manual combat, then the battlefield grid. Freely floating panels and external windows follow later.
+5. Player reference, more board views, generators, custom creators, mobile improvements; optional dice minigame last. Homebrew rules are explicitly deferred for now.
 
 ## Data and behavior
 

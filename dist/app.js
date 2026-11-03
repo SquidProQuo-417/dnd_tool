@@ -1,3 +1,4 @@
+import { WorkspacePanels } from "./workspace-ui.js";
 import { RulesPanel } from "./rules-ui.js";
 import { makeComponent, componentSummary } from "./components.js";
 import { componentEditor, bindStructuredComponents } from "./component-ui.js";
@@ -53,10 +54,37 @@ const icons = {
   Characters: "♙",
   "Idea board": "◇",
   Rules: "▥",
+  Dice: "⚄",
   Roadmap: "☷",
   Settings: "⚙",
 };
 const componentOpen = new Map();
+let lastDockView = null;
+let panelDice = { expression: "1d20", history: [] };
+const dock = new WorkspacePanels({
+  prefs,
+  savePrefs,
+  esc,
+  icons,
+  render,
+  modal,
+  notify,
+  onFocus: (tool) => {
+    view = tool;
+    lastDockView = tool;
+    syncWorkspaceFocus(tool);
+  },
+});
+view = dock.activeTool || "Workspace";
+lastDockView = view;
+function syncWorkspaceFocus(tool) {
+  const crumb = document.querySelector(".breadcrumbs strong");
+  if (crumb) crumb.textContent = tool;
+  document
+    .querySelectorAll("nav [data-view]")
+    .forEach((el) => el.classList.toggle("active", el.dataset.view === tool));
+}
+
 const rulesPanel = new RulesPanel({ esc, prefs, savePrefs, notify });
 function notify(message) {
   $("#toast").textContent = message;
@@ -138,6 +166,11 @@ function applyPrefs() {
   document.documentElement.style.fontSize = prefs.size + "px";
 }
 function render() {
+  dock.capture();
+  if (view !== lastDockView) {
+    dock.route(view);
+    lastDockView = view;
+  }
   document
     .querySelectorAll("details[data-structured]")
     .forEach((el) => componentOpen.set(el.dataset.structured, el.open));
@@ -152,7 +185,7 @@ function render() {
       )
       .join(
         "",
-      )}</nav><div class="sidebar-bottom"><div class="edition-badge">${project.edition} RULESET <span>DM workspace</span></div><button class="nav-item" data-action="export"><span>↗</span> Export campaign</button><button class="nav-item" data-action="import"><span>↙</span> Import campaign</button><p>Your stories stay yours.<br>No accounts. No cloud required.</p></div></aside><section class="workspace"><header class="topbar"><div class="breadcrumbs"><button class="icon-btn" data-action="sidebar" aria-label="Toggle navigation">☰</button><span>${esc(project.name)}</span><span class="crumb-slash">/</span><strong>${view}</strong></div><div class="top-tools"><span id="save-state" class="save-state">Saved on this device</span><button class="icon-btn" data-action="dice" aria-label="Open dice roller">⚄</button><button class="icon-btn" data-action="inspector" aria-label="Toggle quick reference">▥</button></div></header><main id="main">${content()}</main><footer class="statusbar"><span><i></i> LOCAL-FIRST WORKSPACE</span><span>${project.edition} edition <b>·</b> ${project.characters.length} characters <b>·</b> ${project.notes.length} notes</span><button data-action="export">Back up your adventure ↗</button></footer></section><aside class="inspector"><div class="inspector-title">AT YOUR SIDE<button class="icon-btn" data-action="inspector" aria-label="Collapse quick reference">›</button></div><div class="inspector-section"><span class="eyebrow">CAMPAIGN COMPASS</span><h3>Make room for the unexpected.</h3><p>A good session starts with a few strong ideas. Keep the rest within reach.</p></div><div class="inspector-section"><span class="eyebrow">QUICK ROLL</span><form id="quick-dice"><label class="sr-only" for="dice-expression">Dice expression</label><div class="inline"><input id="dice-expression" name="expression" value="1d20" maxlength="20"><button class="primary" type="submit">Roll</button></div></form><div id="dice-result" class="dice-result">⚄<small>Your next possibility.</small></div><div class="dice-presets">${[4, 6, 8, 10, 12, 20].map((d) => `<button data-roll="1d${d}">d${d}</button>`).join("")}</div></div><div class="inspector-section"><span class="eyebrow">YOUR CREW</span>${
+      )}</nav><div class="sidebar-bottom"><div class="edition-badge">${project.edition} RULESET <span>DM workspace</span></div><button class="nav-item" data-action="export"><span>↗</span> Export campaign</button><button class="nav-item" data-action="import"><span>↙</span> Import campaign</button><p>Your stories stay yours.<br>No accounts. No cloud required.</p></div></aside><section class="workspace"><header class="topbar"><div class="breadcrumbs"><button class="icon-btn" data-action="sidebar" aria-label="Toggle navigation">☰</button><span>${esc(project.name)}</span><span class="crumb-slash">/</span><strong>${view}</strong></div><div class="top-tools"><span id="save-state" class="save-state">Saved on this device</span><button class="icon-btn" data-action="dice" aria-label="Open dice roller">⚄</button><button class="icon-btn" data-action="inspector" aria-label="Toggle quick reference">▥</button></div></header><main id="main">${dock.html(content)}</main><footer class="statusbar"><span><i></i> LOCAL-FIRST WORKSPACE</span><span>${project.edition} edition <b>·</b> ${project.characters.length} characters <b>·</b> ${project.notes.length} notes</span><button data-action="export">Back up your adventure ↗</button></footer></section><aside class="inspector"><div class="inspector-title">AT YOUR SIDE<button class="icon-btn" data-action="inspector" aria-label="Collapse quick reference">›</button></div><div class="inspector-section"><span class="eyebrow">CAMPAIGN COMPASS</span><h3>Make room for the unexpected.</h3><p>A good session starts with a few strong ideas. Keep the rest within reach.</p></div><div class="inspector-section"><span class="eyebrow">QUICK ROLL</span><form id="quick-dice"><label class="sr-only" for="dice-expression">Dice expression</label><div class="inline"><input id="dice-expression" name="expression" value="1d20" maxlength="20"><button class="primary" type="submit">Roll</button></div></form><div id="dice-result" class="dice-result">⚄<small>Your next possibility.</small></div><div class="dice-presets">${[4, 6, 8, 10, 12, 20].map((d) => `<button data-roll="1d${d}">d${d}</button>`).join("")}</div></div><div class="inspector-section"><span class="eyebrow">YOUR CREW</span>${
       project.characters
         .slice(0, 4)
         .map(
@@ -162,6 +195,7 @@ function render() {
         .join("") || "<p>Add your first character to keep them close.</p>"
     }</div><div class="quiet-note"><span>✧</span><p>Leave a little space<br>for a better idea.</p></div></aside></div>`;
   bind();
+  dock.bind();
   document.querySelectorAll("details[data-structured]").forEach((el) => {
     if (componentOpen.has(el.dataset.structured))
       el.open = componentOpen.get(el.dataset.structured);
@@ -170,14 +204,25 @@ function render() {
 function heading(eyebrow, title, description, buttons = "") {
   return `<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${description}</p></div><div class="heading-actions">${buttons}</div></div>`;
 }
-function content() {
-  if (view === "Overview") return overview();
-  if (view === "Notes") return notesView();
-  if (view === "Characters") return charactersView();
-  if (view === "Idea board") return boardView();
-  if (view === "Settings") return settingsView();
-  if (view === "Roadmap") return roadmapView();
-  return rulesView();
+function content(tool = view, paneSize = {}) {
+  if (tool === "Overview") return overview();
+  if (tool === "Notes") return notesView();
+  if (tool === "Characters") return charactersView();
+  if (tool === "Idea board") return boardView();
+  if (tool === "Settings") return settingsView();
+  if (tool === "Roadmap") return roadmapView();
+  if (tool === "Dice") return diceView();
+  return rulesView(paneSize);
+}
+function diceView() {
+  return (
+    heading(
+      "A POSSIBILITY IN EVERY ROLL",
+      "Roll the next possibility.",
+      "Manual rolls, within reach of your other tools.",
+    ) +
+    `<section class="paper-editor dice-panel"><form id="workspace-dice"><label class="field">Dice expression<input id="workspace-dice-expression" name="expression" value="${esc(panelDice.expression)}" placeholder="2d6+3" maxlength="20" required></label><button class="primary" type="submit">Roll dice</button></form><div class="panel-dice-presets">${[4, 6, 8, 10, 12, 20, 100].map((n) => `<button class="secondary" data-panel-roll="1d${n}">d${n}</button>`).join("")}</div><div id="workspace-dice-result" aria-live="polite">${panelDice.history.map((r) => `<div class="panel-roll"><strong>${r.total}</strong><span>${esc(r.expression)}<small>Dice [${r.rolls.join(", ")}]${r.modifier ? " · modifier " + r.modifier : ""}</small></span></div>`).join("") || '<p class="muted">Try 1d20, 2d6+3, or 4d8. Rolls stay in this session.</p>'}</div></section>`
+  );
 }
 function overview() {
   return (
@@ -284,13 +329,13 @@ function cardHTML(c) {
   const char = project.characters.find((p) => p.id === c.characterId);
   return `<article class="idea-card ${c.kind.toLowerCase()}" style="left:${c.x}px;top:${c.y}px" data-card="${c.id}"><div class="card-handle" data-handle="${c.id}"><span>${esc(c.kind.toUpperCase())}</span><span>⠿</span></div>${c.image ? `<img class="card-image" src="${esc(c.image)}" alt="Reference for ${esc(c.title)}">` : ""}<button class="card-content" data-edit-card="${c.id}"><h3>${esc(c.title)}</h3><p>${esc(c.body)}</p></button>${char ? `<details class="card-character"><summary>♙ ${esc(char.name)} <span>⌄</span></summary>${char.components.map((m) => `<div><strong>${esc(m.label)}</strong><p>${esc(componentSummary(char, m))}</p></div>`).join("") || "<p>No components yet.</p>"}<button class="text-btn" data-character="${char.id}">Open original ↗</button></details>` : ""}<div class="card-tools"><button data-upload="${c.id}">${c.image ? "Replace image" : "＋ Image"}</button><button data-edit-card="${c.id}">Edit ↗</button></div></article>`;
 }
-function rulesView() {
+function rulesView(paneSize = {}) {
   return (
     heading(
       "A REFERENCE WITHIN REACH",
       "Find the rule. Keep the story moving.",
       "Search the bundled SRDs, follow a topic, or switch editions without changing your campaign.",
-    ) + rulesPanel.html(project, render)
+    ) + rulesPanel.html(project, render, { compact: paneSize.width < 750 })
   );
 }
 function settingsView() {
@@ -311,7 +356,7 @@ function settingsView() {
       )
       .join(
         "",
-      )}</select></label><label class="field">Font<select id="font"><option value="sans" ${prefs.font === "sans" ? "selected" : ""}>System sans serif</option><option value="serif" ${prefs.font === "serif" ? "selected" : ""}>Literary serif</option><option value="mono" ${prefs.font === "mono" ? "selected" : ""}>Monospace</option></select></label><label class="field">Text size<select id="size">${[14, 16, 18, 20].map((v) => `<option ${prefs.size === v ? "selected" : ""}>${v}</option>`).join("")}</select></label><h2>Layout</h2><p class="muted">At narrow widths, quick reference collapses before the main workspace. You can reopen it from the top bar.</p><button class="secondary" data-action="save-layout">Save current layout</button> <button class="secondary" data-action="restore-layout">Restore saved layout</button><p><button class="text-btn" data-action="reset-layout">Reset appearance and layout</button></p></div><div class="paper-editor"><h2>Campaign settings</h2><label class="field">Campaign name<input id="campaign-name" value="${esc(project.name)}" maxlength="200"></label><label class="field">Default rules edition<select id="campaign-edition"><option ${project.edition === "2014" ? "selected" : ""}>2014</option><option ${project.edition === "2024" ? "selected" : ""}>2024</option></select></label><h2>Your files</h2><p class="muted">Exports include all notes, characters, board connections, and uploaded images. They may contain DM secrets.</p><button class="primary" data-action="export">Export backup</button> <button class="secondary" data-action="import">Import as new campaign</button><p><button class="text-btn" data-action="recover">Recover previous local save</button></p><p class="muted">This browser stores your work locally. Export before switching devices, clearing browser data, or handing off your campaign.</p><h2>Install & offline</h2><p class="muted">On supported browsers, use the browser’s install option. Open once online to cache the application for offline use.</p></div></section>`
+      )}</select></label><label class="field">Font<select id="font"><option value="sans" ${prefs.font === "sans" ? "selected" : ""}>System sans serif</option><option value="serif" ${prefs.font === "serif" ? "selected" : ""}>Literary serif</option><option value="mono" ${prefs.font === "mono" ? "selected" : ""}>Monospace</option></select></label><label class="field">Text size<select id="size">${[14, 16, 18, 20].map((v) => `<option ${prefs.size === v ? "selected" : ""}>${v}</option>`).join("")}</select></label><h2>Layout</h2><p class="muted">Drag tabs between panels or dock them at an edge. Panel options set visibility priority. Narrow windows move lower-priority panels into the restore bar.</p><button class="secondary" data-action="save-layout">Save current layout</button> <button class="secondary" data-action="restore-layout">Manage saved layouts</button><p><button class="text-btn" data-action="reset-layout">Reset appearance</button></p></div><div class="paper-editor"><h2>Campaign settings</h2><label class="field">Campaign name<input id="campaign-name" value="${esc(project.name)}" maxlength="200"></label><label class="field">Default rules edition<select id="campaign-edition"><option ${project.edition === "2014" ? "selected" : ""}>2014</option><option ${project.edition === "2024" ? "selected" : ""}>2024</option></select></label><h2>Your files</h2><p class="muted">Exports include all notes, characters, board connections, and uploaded images. They may contain DM secrets.</p><button class="primary" data-action="export">Export backup</button> <button class="secondary" data-action="import">Import as new campaign</button><p><button class="text-btn" data-action="recover">Recover previous local save</button></p><p class="muted">This browser stores your work locally. Export before switching devices, clearing browser data, or handing off your campaign.</p><h2>Install & offline</h2><p class="muted">On supported browsers, use the browser’s install option. Open once online to cache the application for offline use.</p></div></section>`
   );
 }
 function modal(title, body, onSubmit, label = "Save") {
@@ -581,17 +626,8 @@ const actions = {
       "Remove selected",
     );
   },
-  "save-layout": () => {
-    prefs.savedLayout = { sidebar: prefs.sidebar, inspector: prefs.inspector };
-    savePrefs();
-    notify("Layout saved on this device.");
-  },
-  "restore-layout": () => {
-    if (!prefs.savedLayout) return notify("Save a layout first.");
-    Object.assign(prefs, prefs.savedLayout);
-    savePrefs();
-    render();
-  },
+  "save-layout": () => dock.saveDialog(),
+  "restore-layout": () => dock.manager(),
   "reset-layout": () => {
     Object.assign(prefs, {
       theme: "paper",
@@ -642,7 +678,35 @@ function addComponent(type) {
   render();
 }
 function bind() {
-  if (view === "Rules") rulesPanel.bind(project, render);
+  const diceForm = document.querySelector("#workspace-dice");
+  const doPanelRoll = (expression) => {
+    try {
+      const result = rollDice(expression);
+      panelDice.expression = expression;
+      panelDice.history.unshift({ ...result, expression });
+      panelDice.history = panelDice.history.slice(0, 10);
+      render();
+    } catch (e) {
+      notify(e.message);
+    }
+  };
+  if (diceForm) {
+    diceForm.onsubmit = (e) => {
+      e.preventDefault();
+      doPanelRoll(new FormData(diceForm).get("expression"));
+    };
+    document.querySelector("#workspace-dice-expression").oninput = (e) =>
+      (panelDice.expression = e.target.value);
+  }
+  document
+    .querySelectorAll("[data-panel-roll]")
+    .forEach((b) => (b.onclick = () => doPanelRoll(b.dataset.panelRoll)));
+
+  if (
+    document.querySelector(".rules-workspace") ||
+    document.querySelector("#retry-rules")
+  )
+    rulesPanel.bind(project, render);
   bindStructuredComponents({
     character: project.characters.find((c) => c.id === selectedCharacter),
     save,

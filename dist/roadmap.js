@@ -22,7 +22,7 @@ export const roadmap = [
   },
   {
     title: "Rules library",
-    status: "Current milestone",
+    status: "Available",
     items: [
       "Available: 2014 SRD 5.1 and 2024 SRD 5.2.1 reference text",
       "Searchable hierarchy, icons and breadcrumbs",
@@ -32,12 +32,14 @@ export const roadmap = [
     ],
   },
   {
-    title: "Homebrew rules",
-    status: "Planned",
+    title: "Panel foundation",
+    status: "Current milestone",
     items: [
-      "Matching rules hierarchy",
-      "Linked additions and replacements",
-      "Visible replacement indicators",
+      "Movable tabs and docked split panels",
+      "Resize dividers and visibility priorities",
+      "Collapse, hide and restore tools without losing campaign data",
+      "Named layouts, reset and recovery",
+      "Next: initiative and combat tracking",
     ],
   },
   {
@@ -59,11 +61,11 @@ export const roadmap = [
   },
   {
     title: "Advanced customization",
-    status: "Planned",
+    status: "Later",
     items: [
-      "Panel docking, resizing and reordering",
-      "Visibility priorities and named layouts",
+      "Freely floating panels inside the app",
       "Separate windows for additional monitors",
+      "Expanded mobile workspace behavior",
     ],
   },
   {
@@ -73,6 +75,15 @@ export const roadmap = [
       "Focused reference without DM tools",
       "Character creation, class/action questions and spell explanations",
       "Build recommendations remain deferred",
+    ],
+  },
+  {
+    title: "Homebrew rules",
+    status: "Deferred",
+    items: [
+      "Matching rules hierarchy",
+      "Linked additions and replacements",
+      "Visible replacement indicators",
     ],
   },
   {

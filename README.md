@@ -20,11 +20,12 @@ Open http://127.0.0.1:4173. A demo campaign provides editable sample notes, char
 - Scrollable idea canvas, draggable cards, labeled arrow connections and live character references.
 - Uploaded raster reference images (3 MB per image), embedded in JSON exports.
 - IndexedDB autosave, previous-save recovery and validated imports that create separate campaigns.
-- Themes, fonts, text sizes, collapsible navigation/reference panels and a saved visibility layout.
+- Movable tool tabs, docked split panels, resize dividers, visibility priorities, hide/restore controls, and named saved layouts with reset/recovery.
+- Themes, fonts, text sizes, and collapsible navigation/reference panels.
 - Dice expressions, install manifest and an offline service worker.
 - Searchable 2014/2024 SRD rules library with topic hierarchy, edition switching, bookmarks, recent topics, source-page links, and bundled PDFs.
 
-Homebrew overlays, standard equipment presets, combat, initiative, advanced docking, external windows and player mode are later milestones. The reference includes SRD content rather than every published rulebook. Structured components are generic calculators with manual settings, not a complete character-sheet rules engine.
+Homebrew overlays, standard equipment presets, combat, initiative, freely floating panels, external windows and player mode are later milestones. The reference includes SRD content rather than every published rulebook. Structured components are generic calculators with manual settings, not a complete character-sheet rules engine.
 
 ## Files and privacy
 
@@ -53,3 +54,5 @@ See [the project specification](docs/PROJECT.md) for agreed requirements and the
 The published [roadmap and to-do list](docs/ROADMAP.md) is also available from **Roadmap** inside the app. See [calculation details](docs/MECHANICS.md) for structured component behavior and rule references.
 
 See [rules-library coverage and maintenance](docs/RULES-LIBRARY.md) for source attribution, extraction limits, and instructions for rebuilding the index.
+
+See [workspace controls](docs/WORKSPACE.md) for docking, tab movement, visibility priorities, named layouts, and layout recovery.

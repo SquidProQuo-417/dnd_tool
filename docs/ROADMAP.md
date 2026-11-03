@@ -11,7 +11,7 @@ This is the shared project to-do list. Status reflects implemented behavior, not
 - [x] Movable brainstorming cards, labeled connections, and character references.
 - [x] Uploaded portraits and reference images embedded in campaign files.
 - [x] JSON export/import, local autosave, and previous-save recovery.
-- [x] Themes, fonts, text sizes, panel visibility, and one saved visibility layout.
+- [x] Themes, fonts, text sizes, panel visibility, and named workspace layouts.
 - [x] Dice roller and offline app caching.
 
 ## 1. Refine preparation — available, further refinements planned
@@ -27,7 +27,7 @@ This is the shared project to-do list. Status reflects implemented behavior, not
 - [ ] Outline and column views alongside the canvas.
 - [ ] More flexible record references and organization.
 
-## 2. Rules library — current milestone
+## 2. Rules library — available, further review planned
 
 - [x] Source-attributed 2014 SRD 5.1 and 2024 SRD 5.2.1 reference text, with original PDFs.
 - [x] Searchable, collapsible hierarchy with icons and breadcrumbs.
@@ -37,11 +37,18 @@ This is the shared project to-do list. Status reflects implemented behavior, not
 - [ ] Continue reviewing extracted text, table layouts, and navigation quality against source pages.
 - [ ] Standard equipment presets with edition-specific data.
 
-## 3. Homebrew rules
+## 3. Panel foundation — current milestone
 
-- [ ] Matching rules hierarchy.
-- [ ] Additions and replacements linked to standard rules.
-- [ ] Replacement indicators in the standard rules browser.
+- [x] Open existing tools as tabs and show several tools at once.
+- [x] Drag tabs to reorder, move between panels, or dock at an edge.
+- [x] Split panels horizontally or vertically and resize with dividers.
+- [x] Keyboard tab navigation, resizing, and menu alternatives to drag and drop.
+- [x] Collapse panels, hide tools, and restore them without losing campaign content.
+- [x] Configurable visibility priorities and automatic collapse when space is limited.
+- [x] Named saved layouts, explicit replacement, deletion, reset, and previous-layout recovery.
+- [x] Validate stored layouts and recover invalid preferences separately from campaign data.
+
+The next implementation milestone is initiative and combat tracking. Homebrew remains deferred.
 
 ## 4. Session tracking
 
@@ -55,12 +62,11 @@ This is the shared project to-do list. Status reflects implemented behavior, not
 - [ ] Movement measurement.
 - [ ] Uploaded background maps.
 
-## 6. Advanced workspace customization
+## 6. Advanced workspace customization — later
 
-- [ ] Resizable, reorderable, dockable panels.
-- [ ] Configurable visibility priorities as the window narrows.
-- [ ] Multiple named saved layouts.
+- [ ] Freely floating panels inside the app.
 - [ ] Detached windows for additional monitors.
+- [ ] Expanded mobile layout behavior.
 
 ## 7. Player mode
 
@@ -76,6 +82,12 @@ This is the shared project to-do list. Status reflects implemented behavior, not
 - [ ] Mobile refinements.
 - [ ] Battlefield walls, fog of war, and hidden enemies.
 - [ ] Optional dice minigame.
+
+## Deferred: homebrew rules
+
+- [ ] Matching rules hierarchy.
+- [ ] Additions and replacements linked to standard rules.
+- [ ] Replacement indicators in the standard rules browser.
 
 ## Distribution
 

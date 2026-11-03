@@ -51,7 +51,8 @@ export class RulesPanel {
         render();
       });
   }
-  html(project, render) {
+  html(project, render, { compact = false } = {}) {
+    this.treeVisible = this.treeOverride ?? !compact;
     const esc = this.esc;
     if (this.campaignId !== project.id) {
       this.campaignId = project.id;
@@ -260,7 +261,7 @@ export class RulesPanel {
         render();
       };
     scope.querySelector("#toggle-rule-tree").onclick = () => {
-      this.treeVisible = !this.treeVisible;
+      this.treeOverride = !this.treeVisible;
       render();
     };
   }
