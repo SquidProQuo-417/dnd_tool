@@ -12,7 +12,7 @@ export const roadmap = [
   },
   {
     title: "Refine preparation",
-    status: "Current milestone",
+    status: "Available",
     items: [
       "Structured character statistics and ability modifiers",
       "Weapons, ammunition and inventory components",
@@ -22,12 +22,13 @@ export const roadmap = [
   },
   {
     title: "Rules library",
-    status: "Next",
+    status: "Current milestone",
     items: [
-      "Source-attributed 2014 and 2024 content",
+      "Available: 2014 SRD 5.1 and 2024 SRD 5.2.1 reference text",
       "Searchable hierarchy, icons and breadcrumbs",
-      "Independent panel edition toggle",
-      "Bookmarks, related rules and standard equipment presets",
+      "Independent edition toggle, bookmarks and recent rules",
+      "Bundled source PDFs and offline reading",
+      "Next: extraction review and standard equipment presets",
     ],
   },
   {

@@ -1,4 +1,4 @@
-const CACHE = "waypoint-v2";
+const CACHE = "waypoint-v3";
 const FILES = [
   "./",
   "./index.html",
@@ -7,6 +7,13 @@ const FILES = [
   "./components.js",
   "./component-ui.js",
   "./roadmap.js",
+  "./rules-ui.js",
+  "./rules-model.js",
+  "./rules/2014.json",
+  "./rules/2024.json",
+  "./rules/srd-2014.pdf",
+  "./rules/srd-2024.pdf",
+  "./rules/ATTRIBUTION.txt",
   "./styles.css",
   "./icon.svg",
   "./manifest.webmanifest",
@@ -20,7 +27,9 @@ self.addEventListener("activate", (event) =>
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)),
+          keys
+            .filter((key) => key.startsWith("waypoint-") && key !== CACHE)
+            .map((key) => caches.delete(key)),
         ),
       ),
   ),

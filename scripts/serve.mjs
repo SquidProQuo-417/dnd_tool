@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 const root = path.resolve("dist");
 const types = {
+  ".pdf": "application/pdf",
+  ".txt": "text/plain; charset=utf-8",
   ".html": "text/html",
   ".js": "text/javascript",
   ".css": "text/css",

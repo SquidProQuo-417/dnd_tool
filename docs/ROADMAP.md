@@ -14,7 +14,7 @@ This is the shared project to-do list. Status reflects implemented behavior, not
 - [x] Themes, fonts, text sizes, panel visibility, and one saved visibility layout.
 - [x] Dice roller and offline app caching.
 
-## 1. Refine preparation — current milestone
+## 1. Refine preparation — available, further refinements planned
 
 - [x] Structured statistics and calculated ability modifiers.
 - [x] Structured weapons with attack/damage roll buttons and ammunition references.
@@ -27,12 +27,14 @@ This is the shared project to-do list. Status reflects implemented behavior, not
 - [ ] Outline and column views alongside the canvas.
 - [ ] More flexible record references and organization.
 
-## 2. Rules library
+## 2. Rules library — current milestone
 
-- [ ] Source-attributed, distributable 2014/2024 core rules content.
-- [ ] Searchable, collapsible hierarchy with icons and breadcrumbs.
-- [ ] Independent edition toggle inside the rules panel.
-- [ ] Bookmarks, recent rules, and related-rule links.
+- [x] Source-attributed 2014 SRD 5.1 and 2024 SRD 5.2.1 reference text, with original PDFs.
+- [x] Searchable, collapsible hierarchy with icons and breadcrumbs.
+- [x] Independent edition toggle inside the rules panel, with contextual topic matching and missing-entry notices.
+- [x] Bookmarks, recent rules, and related-rule links.
+- [x] Alphabetical browsing and offline reference access.
+- [ ] Continue reviewing extracted text, table layouts, and navigation quality against source pages.
 - [ ] Standard equipment presets with edition-specific data.
 
 ## 3. Homebrew rules

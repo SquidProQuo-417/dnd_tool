@@ -1,3 +1,4 @@
+import { RulesPanel } from "./rules-ui.js";
 import { makeComponent, componentSummary } from "./components.js";
 import { componentEditor, bindStructuredComponents } from "./component-ui.js";
 import { roadmap } from "./roadmap.js";
@@ -56,6 +57,7 @@ const icons = {
   Settings: "⚙",
 };
 const componentOpen = new Map();
+const rulesPanel = new RulesPanel({ esc, prefs, savePrefs, notify });
 function notify(message) {
   $("#toast").textContent = message;
   $("#toast").classList.add("show");
@@ -285,11 +287,10 @@ function cardHTML(c) {
 function rulesView() {
   return (
     heading(
-      "RULES REFERENCE · PLANNED",
-      "A clear place for the rules.",
-      "The complete rules library is a later milestone.",
-    ) +
-    `<section class="paper-editor roadmap"><span class="pill">NOT YET IMPLEMENTED</span><h2>Two editions. One organized reference.</h2><p>The upcoming library will include a searchable rules tree, an independent 2014/2024 browsing toggle, and matching homebrew navigation.</p><p>We’ll add source-attributed content that can be distributed with the app. This preparation release does not include a rulebook.</p><div class="rule-preview">▱ Combat<br>　▱ Your turn<br>　　▤ Actions<br>　　▤ Bonus actions<br>　▤ Reactions</div><p class="muted">For now, keep your campaign’s house rules in a custom notes category.</p><button class="primary" data-action="house-note">＋ Write a house rule</button></section>`
+      "A REFERENCE WITHIN REACH",
+      "Find the rule. Keep the story moving.",
+      "Search the bundled SRDs, follow a topic, or switch editions without changing your campaign.",
+    ) + rulesPanel.html(project, render)
   );
 }
 function settingsView() {
@@ -641,6 +642,7 @@ function addComponent(type) {
   render();
 }
 function bind() {
+  if (view === "Rules") rulesPanel.bind(project, render);
   bindStructuredComponents({
     character: project.characters.find((c) => c.id === selectedCharacter),
     save,
