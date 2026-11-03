@@ -1,5 +1,6 @@
 import { characterOptions } from "./character-options.js";
 import { readFeatureChoices } from "./character-features.js";
+import { syncScores } from "./character-sheet.js";
 
 export function characterFields(r, esc) {
   const edition = r.rulesEdition || "2024";
@@ -63,6 +64,14 @@ export function bindCharacterChoices(form, record, readForm, changed) {
   form.querySelectorAll("[data-character-choice]").forEach((el) => {
     el.onchange = () => {
       const next = readForm(form, record);
+      if (
+        next.scoreSetup &&
+        (el.name === "backgroundChoice" || el.name === "rulesEdition")
+      ) {
+        next.scoreSetup.background = Object.fromEntries(
+          ["STR", "DEX", "CON", "INT", "WIS", "CHA"].map((a) => [a, 0]),
+        );
+      }
       // Changing editions keeps custom text; unavailable standard species become unselected.
       if (el.name === "rulesEdition") {
         const options = characterOptions[next.rulesEdition];
@@ -78,6 +87,7 @@ export function bindCharacterChoices(form, record, readForm, changed) {
           next.background = "";
       }
       applyCharacterOptions(next);
+      syncScores(next);
       changed(next);
     };
   });

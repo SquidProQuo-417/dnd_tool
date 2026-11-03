@@ -70,6 +70,34 @@ export function pointSpend(setup) {
     0,
   );
 }
+export function scoreInputMaximum(r, source, ability) {
+  const setup = scoreSetup(r);
+  if (source === "base") {
+    if (setup.mode !== "point-buy") return 60;
+    const others = scoreAbilities
+      .filter((a) => a !== ability)
+      .reduce((n, a) => n + (pointCosts[setup.base[a]] ?? 0), 0);
+    return Math.max(
+      8,
+      ...Object.keys(pointCosts)
+        .map(Number)
+        .filter((v) => pointCosts[v] + others <= 27),
+    );
+  }
+  if (source === "background") {
+    const others = backgroundAbilities(r)
+      .filter((a) => a !== ability)
+      .map((a) => setup.background[a]);
+    return Math.max(
+      0,
+      Math.min(
+        others.includes(2) ? 1 : 2,
+        3 - others.reduce((n, v) => n + v, 0),
+      ),
+    );
+  }
+  return 30;
+}
 export function backgroundDefinition(r) {
   return (
     !r.backgroundCustom &&
@@ -203,6 +231,8 @@ export function validateSheet(r) {
     if (
       !["point-buy", "manual"].includes(s.mode) ||
       typeof s.applySpecies !== "boolean" ||
+      (s.homebrewEnabled !== undefined &&
+        typeof s.homebrewEnabled !== "boolean") ||
       !map(
         s.base,
         s.mode === "point-buy" ? 8 : 1,
@@ -245,6 +275,15 @@ export function validateSheet(r) {
     throw Error("Invalid saving throw proficiencies.");
   if (r.saveBonuses !== undefined && !map(r.saveBonuses, -100, 100))
     throw Error("Invalid saving throw bonuses.");
+  validateInventory(r);
+  if (
+    r.background !== undefined &&
+    (typeof r.background !== "string" || r.background.length > 200)
+  )
+    throw Error("Invalid background.");
+  return r;
+}
+export function validateInventory(r) {
   if (
     r.wallet !== undefined &&
     (!r.wallet ||
@@ -293,11 +332,6 @@ export function validateSheet(r) {
       ))
   )
     throw Error("Invalid starting equipment grant.");
-  if (
-    r.background !== undefined &&
-    (typeof r.background !== "string" || r.background.length > 200)
-  )
-    throw Error("Invalid background.");
   return r;
 }
 
@@ -398,6 +432,6 @@ export function applyEquipment(r, source, plan) {
     ],
     equipmentGrants: { ...r.equipmentGrants, [source]: { ...plan.wallet } },
   };
-  validateSheet(next);
+  validateInventory(next);
   return next;
 }

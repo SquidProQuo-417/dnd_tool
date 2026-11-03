@@ -1,5 +1,31 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { validateInventory } from "../dist/character-sheet.js";
+
+test("equipment validation is independent of unfinished ability allocations", () => {
+  const r = createActor("character", {
+    name: "Unfinished",
+    background: "Sage",
+  });
+  r.scoreSetup.background.CON = 2;
+  r.scoreSetup.background.INT = 2;
+  r.scoreSetup.background.WIS = 2;
+  syncScores(r);
+  assert.throws(() => validateActor(r), /Background increases/);
+  const next = applyEquipment(r, "class", equipmentPlan("Spear, 11 GP"));
+  validateInventory(next);
+  assert.equal(next.wallet.gp, 11);
+  assert.equal(next.inventory[0].name, "Spear");
+  assert.equal(next.scoreSetup.background.INT, 2);
+  assert.throws(
+    () =>
+      applyEquipment(r, "class", {
+        items: [{ id: "bad-item", name: "Spear", quantity: -1, source: "" }],
+        wallet: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+      }),
+    /Invalid inventory/,
+  );
+});
 import {
   createActor,
   validateActor,

@@ -5,6 +5,7 @@ import {
   renderInventory,
   readSheet,
   updateSheetOutputs,
+  constrainScoreInput,
 } from "./character-sheet-ui.js";
 import {
   syncScores,
@@ -12,6 +13,7 @@ import {
   signed,
   scoreAbilities,
   equipmentText,
+  validateInventory,
   equipmentPackages,
   equipmentPlan,
   applyEquipment,
@@ -186,9 +188,29 @@ export class ActorsUI {
       updateSheetOutputs(form, next);
       return next;
     };
-    form
-      .querySelectorAll("[data-sheet-live]")
-      .forEach((el) => (el.oninput = update));
+    form.querySelectorAll("[data-sheet-live]").forEach(
+      (el) =>
+        (el.oninput = () => {
+          constrainScoreInput(form, el, this.readForm(form, record));
+          update();
+        }),
+    );
+    const homebrew = form.querySelector("[data-homebrew-scores]");
+    if (homebrew)
+      homebrew.onclick = () => {
+        const next = update();
+        next.scoreSetup.homebrewEnabled = !next.scoreSetup.homebrewEnabled;
+        onDraft(next);
+        form.querySelector("[data-score-editor]").outerHTML = renderScores(
+          next,
+          this.esc,
+        );
+        form.querySelector(".score-bonuses").open = true;
+        this.bindSheetControls(form, next, onDraft);
+        const status = form.querySelector(".actor-save-state");
+        if (status) status.textContent = "Unsaved";
+      };
+    updateSheetOutputs(form, this.readForm(form, record));
     form.querySelectorAll("[data-sheet-refresh]").forEach(
       (el) =>
         (el.onchange = () => {
@@ -260,7 +282,7 @@ export class ActorsUI {
       };
   }
   showEquipmentDraft(next) {
-    validateActor(next);
+    validateInventory(next);
     this.drafts.set(next.id, next);
     this.render();
     document

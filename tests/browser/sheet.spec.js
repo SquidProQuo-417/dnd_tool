@@ -1,5 +1,91 @@
 import { test, expect } from "@playwright/test";
 
+test("score limits prevent invalid allocations, homebrew stays locked and inventory ignores unrelated score errors", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "New project", exact: false })
+    .first()
+    .click();
+  await page.getByLabel("Project name", { exact: true }).fill("Limits");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-open-tool="Characters"]').click();
+  await page.locator('[data-create-actor="character"]').click();
+  const dialog = page.locator("#dialog");
+  await dialog.getByLabel("Name", { exact: true }).fill("Limits");
+  await dialog.getByLabel("Class", { exact: true }).selectOption("Monk");
+  await dialog.getByLabel("Background", { exact: true }).selectOption("Sage");
+  for (const a of ["STR", "DEX", "CON"])
+    await dialog.getByLabel(a + " base score", { exact: true }).fill("15");
+  await dialog.getByLabel("INT base score", { exact: true }).fill("15");
+  await expect(
+    dialog.getByLabel("INT base score", { exact: true }),
+  ).toHaveValue("8");
+  await dialog.getByLabel("STR base score", { exact: true }).fill("14");
+  await dialog.getByLabel("INT base score", { exact: true }).fill("15");
+  await expect(
+    dialog.getByLabel("INT base score", { exact: true }),
+  ).toHaveValue("10");
+  await dialog.getByLabel("STR base score", { exact: true }).fill("15");
+  await expect(
+    dialog.getByLabel("STR base score", { exact: true }),
+  ).toHaveValue("14");
+  await expect(dialog.locator("[data-point-budget]")).toHaveText(
+    "27 / 27 points",
+  );
+  await expect(dialog.locator(".over-budget")).toHaveCount(0);
+  await dialog.getByText("Score bonuses", { exact: true }).click();
+  await dialog.getByLabel("background CON bonus", { exact: true }).fill("2");
+  await dialog.getByLabel("background INT bonus", { exact: true }).fill("2");
+  await expect(
+    dialog.getByLabel("background INT bonus", { exact: true }),
+  ).toHaveValue("1");
+  await dialog.getByLabel("background WIS bonus", { exact: true }).fill("2");
+  await expect(
+    dialog.getByLabel("background WIS bonus", { exact: true }),
+  ).toHaveValue("0");
+  await dialog.getByLabel("background CON bonus", { exact: true }).fill("1");
+  await dialog.getByLabel("background WIS bonus", { exact: true }).fill("1");
+  await dialog.getByLabel("background CON bonus", { exact: true }).fill("2");
+  await expect(
+    dialog.getByLabel("background CON bonus", { exact: true }),
+  ).toHaveValue("1");
+  await expect(
+    dialog.getByLabel("class STR bonus", { exact: true }),
+  ).not.toBeEditable();
+  await dialog
+    .getByRole("button", { name: "Enter custom homebrew value", exact: true })
+    .click();
+  await dialog.getByLabel("class STR bonus", { exact: true }).fill("1");
+  await dialog
+    .getByRole("button", { name: "Lock homebrew values", exact: true })
+    .click();
+  await expect(
+    dialog.getByLabel("class STR bonus", { exact: true }),
+  ).not.toBeEditable();
+  await dialog.getByLabel("Class", { exact: true }).selectOption("Fighter");
+  await dialog.getByRole("button", { name: "Create", exact: true }).click();
+  const form = page.locator("[data-edit-actor]");
+  await expect(form.locator("[data-score-total=STR]")).toHaveText("15");
+  // Simulate an older invalid draft; loading inventory must not validate its ability allocation.
+  await form
+    .locator("[name=score-background-CON]")
+    .evaluate((el) => (el.value = "2"));
+  await form
+    .locator("[name=score-background-INT]")
+    .evaluate((el) => (el.value = "2"));
+  await form
+    .locator("[name=score-background-WIS]")
+    .evaluate((el) => (el.value = "2"));
+  await form.locator("[data-equipment-section] > summary").click();
+  await form.locator("[data-load-equipment=class]").click();
+  await dialog.getByRole("button", { name: "Load", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  expect(await form.locator("[data-inventory-row]").count()).toBeGreaterThan(0);
+  await expect(form.locator("[name=score-background-CON]")).toHaveValue("2");
+});
+
 test("2014 species bonuses and equipment choices keep the point-buy budget separate", async ({
   page,
 }) => {
@@ -26,8 +112,12 @@ test("2014 species bonuses and equipment choices keep the point-buy budget separ
     .selectOption("Acolyte");
   for (const a of ["STR", "DEX", "CON", "INT", "WIS", "CHA"])
     await dialog.getByLabel(a + " base score", { exact: true }).fill("15");
-  await dialog.getByRole("button", { name: "Create", exact: true }).click();
-  await expect(dialog.locator("#form-error")).toContainText("27 points");
+  await expect(dialog.locator("[data-point-budget]")).toHaveText(
+    "27 / 27 points",
+  );
+  await expect(
+    dialog.getByLabel("CHA base score", { exact: true }),
+  ).toHaveValue("8");
   for (const [a, n] of Object.entries({
     STR: 8,
     DEX: 15,
@@ -41,11 +131,9 @@ test("2014 species bonuses and equipment choices keep the point-buy budget separ
   await dialog.getByRole("button", { name: "Create", exact: true }).click();
   const form = page.locator("[data-edit-actor]");
   await form.locator("[data-feature-section] > summary").click();
-  const subrace = form
-    .locator(".feature-card")
-    .filter({
-      has: page.locator(":scope > summary > span", { hasText: /^Subrace$/ }),
-    });
+  const subrace = form.locator(".feature-card").filter({
+    has: page.locator(":scope > summary > span", { hasText: /^Subrace$/ }),
+  });
   await subrace.locator(":scope > summary").click();
   await form.getByLabel("Subrace", { exact: true }).selectOption("High Elf");
   await expect(form.locator("[data-score-total=INT]")).toHaveText("15");
@@ -109,6 +197,12 @@ test("point buy, source bonuses, saves, equipment and currency persist together"
   await dialog.getByText("Score bonuses", { exact: true }).click();
   await dialog.getByLabel("background INT bonus", { exact: true }).fill("2");
   await dialog.getByLabel("background CON bonus", { exact: true }).fill("1");
+  await expect(
+    dialog.getByLabel("feat INT bonus", { exact: true }),
+  ).toHaveAttribute("readonly", "");
+  await dialog
+    .getByRole("button", { name: "Enter custom homebrew value", exact: true })
+    .click();
   await dialog.getByLabel("feat INT bonus", { exact: true }).fill("1");
   await expect(dialog.locator("[data-score-total=INT]")).toHaveText("18");
   await expect(dialog.locator("[data-score-modifier=INT]")).toHaveText("+4");
@@ -150,13 +244,11 @@ test("point buy, source bonuses, saves, equipment and currency persist together"
     .locator(".feature-card > summary")
     .evaluateAll((nodes) => nodes.map((n) => n.getBoundingClientRect().height));
   expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.5);
-  const human = form
-    .locator(".feature-card")
-    .filter({
-      has: page.locator(":scope > summary > span", {
-        hasText: /^Human traits$/,
-      }),
-    });
+  const human = form.locator(".feature-card").filter({
+    has: page.locator(":scope > summary > span", {
+      hasText: /^Human traits$/,
+    }),
+  });
   await expect(human).toHaveCount(1);
   await expect(human).toContainText("Resourceful");
   await expect(human).toContainText("Skillful");

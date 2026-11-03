@@ -543,6 +543,11 @@
 .score-bonus-grid input {
   width: 100%;
 }
+.score-bonus-grid input[readonly] {
+  background: var(--soft);
+  color: var(--muted);
+  cursor: default;
+}
 .score-bonus-group h4 {
   font-size: 0.85rem;
   margin: 1rem 0 0;

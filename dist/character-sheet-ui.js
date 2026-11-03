@@ -10,6 +10,7 @@ import {
   coins,
   coinValues,
   syncScores,
+  scoreInputMaximum,
 } from "./character-sheet.js";
 
 export function renderScores(r, esc) {
@@ -17,17 +18,17 @@ export function renderScores(r, esc) {
     breakdown = scoreBreakdown(r),
     spent = pointSpend(setup),
     allowed = backgroundAbilities(r);
-  return `<div data-score-editor><div class="score-toolbar"><label class="field">Score method<select name="score-mode" aria-label="Score method" data-sheet-refresh><option value="point-buy" ${setup.mode === "point-buy" ? "selected" : ""}>Point buy · 27 points</option><option value="manual" ${setup.mode === "manual" ? "selected" : ""}>Manual scores</option></select></label><output data-point-budget ${setup.mode === "point-buy" ? "" : "hidden"}>${Number.isFinite(spent) ? spent : 0} / 27 points</output></div>${!r.scoreSetup ? '<small class="score-hint">Existing scores inferred from saved modifiers.</small>' : ""}<div class="score-grid">${scoreAbilities
+  return `<div data-score-editor><input type="hidden" name="score-homebrew" value="${setup.homebrewEnabled ? 1 : 0}"><div class="score-toolbar"><label class="field">Score method<select name="score-mode" aria-label="Score method" data-sheet-refresh><option value="point-buy" ${setup.mode === "point-buy" ? "selected" : ""}>Point buy · 27 points</option><option value="manual" ${setup.mode === "manual" ? "selected" : ""}>Manual scores</option></select></label><output data-point-budget ${setup.mode === "point-buy" ? "" : "hidden"}>${Number.isFinite(spent) ? spent : 0} / 27 points</output></div>${!r.scoreSetup ? '<small class="score-hint">Existing scores inferred from saved modifiers.</small>' : ""}<div class="score-grid">${scoreAbilities
     .map((a) => {
       const row = breakdown[a];
       return `<div class="score-card"><span class="score-name">${a}</span><output class="score-total" data-score-total="${a}">${row.total}</output><output class="score-modifier" data-score-modifier="${a}">${signed(row.modifier)}</output><label class="field">Base<input name="score-base-${a}" aria-label="${a} base score" type="number" min="${setup.mode === "point-buy" ? 8 : 1}" max="${setup.mode === "point-buy" ? 15 : 60}" step="1" value="${setup.base[a]}" required data-sheet-live></label><details class="score-breakdown"><summary>Breakdown</summary><dl data-score-breakdown="${a}">${breakdownRows(row)}</dl></details></div>`;
     })
     .join(
       "",
-    )}</div><details class="score-bonuses"><summary>Score bonuses</summary>${r.rulesEdition === "2014" ? `<label class="sheet-check"><input type="checkbox" name="score-species" ${setup.applySpecies ? "checked" : ""} data-sheet-live>Apply species bonuses</label>` : ""}${r.rulesEdition === "2024" ? `<div class="score-bonus-group"><h4>Background · +2/+1 or three +1</h4>${allowed.length ? `<div class="score-bonus-grid">${allowed.map((a) => bonusInput("background", a, setup.background[a], 0, 2)).join("")}</div>` : '<span class="score-hint">Select a background to assign its increases.</span>'}</div>` : ""}${["class", "feat", "other"].map((source) => `<div class="score-bonus-group"><h4>${source === "class" ? "Class" : source === "feat" ? "Feat" : "Other"}</h4><div class="score-bonus-grid">${scoreAbilities.map((a) => bonusInput(source, a, setup[source][a], -30, 30)).join("")}</div></div>`).join("")}</details></div>`;
+    )}</div><details class="score-bonuses"><summary>Score bonuses</summary>${r.rulesEdition === "2014" ? `<label class="sheet-check"><input type="checkbox" name="score-species" ${setup.applySpecies ? "checked" : ""} data-sheet-live>Apply species bonuses</label>` : ""}${r.rulesEdition === "2024" ? `<div class="score-bonus-group"><h4>Background · +2/+1 or three +1</h4>${allowed.length ? `<div class="score-bonus-grid">${allowed.map((a) => bonusInput("background", a, setup.background[a], 0, 2)).join("")}</div>` : '<span class="score-hint">Select a background to assign its increases.</span>'}</div>` : ""}<button type="button" class="secondary" data-homebrew-scores>${setup.homebrewEnabled ? "Lock homebrew values" : "Enter custom homebrew value"}</button><small class="score-hint">Class and feat adjustments are not automated yet.</small>${["class", "feat", "other"].map((source) => `<div class="score-bonus-group"><h4>${source === "class" ? "Class" : source === "feat" ? "Feat" : "Other"}</h4><div class="score-bonus-grid">${scoreAbilities.map((a) => bonusInput(source, a, setup[source][a], -30, 30, !setup.homebrewEnabled)).join("")}</div></div>`).join("")}</details></div>`;
 }
-function bonusInput(source, a, value, min, max) {
-  return `<label class="field">${a}<input aria-label="${source} ${a} bonus" name="score-${source}-${a}" type="number" min="${min}" max="${max}" step="1" value="${value}" required data-sheet-live></label>`;
+function bonusInput(source, a, value, min, max, locked = false) {
+  return `<label class="field">${a}<input aria-label="${source} ${a} bonus" name="score-${source}-${a}" type="number" min="${min}" max="${max}" step="1" value="${value}" ${locked ? 'readonly aria-readonly="true"' : ""} required data-sheet-live></label>`;
 }
 function breakdownRows(row) {
   return ["base", "species", "background", "class", "feat", "other"]
@@ -68,6 +69,7 @@ export function readSheet(form, r) {
   if (d.has("score-mode")) {
     const setup = structuredClone(scoreSetup(r));
     setup.mode = d.get("score-mode");
+    setup.homebrewEnabled = d.get("score-homebrew") === "1";
     for (const a of scoreAbilities) {
       setup.base[a] = Number(d.get("score-base-" + a));
       for (const source of ["background", "class", "feat", "other"])
@@ -133,12 +135,34 @@ export function updateSheetOutputs(form, r) {
     const spent = pointSpend(scoreSetup(r));
     budget.textContent =
       (Number.isFinite(spent) ? spent : "—") + " / 27 points";
-    budget.classList.toggle("over-budget", spent > 27);
+    budget.classList.remove("over-budget");
   }
+  for (const a of scoreAbilities)
+    for (const source of ["base", "background"]) {
+      const input = form.elements["score-" + source + "-" + a];
+      if (input) input.max = scoreInputMaximum(r, source, a);
+    }
   const currency = form.querySelector("[data-currency-total]");
   if (currency)
     currency.textContent =
       coins.reduce((n, c) => n + (r.wallet?.[c] || 0) * coinValues[c], 0) /
         100 +
       " GP total";
+}
+export function constrainScoreInput(form, input, r) {
+  const match = input.name.match(/^score-(base|background)-([A-Z]{3})$/);
+  if (!match || input.value === "") return;
+  const [, source, a] = match,
+    value = Number(input.value),
+    minimum =
+      source === "base" ? (scoreSetup(r).mode === "point-buy" ? 8 : 1) : 0;
+  if (!Number.isFinite(value)) return;
+  // Allow a partial first digit while typing a two-digit base score.
+  if (source === "base" && value < minimum && value >= 0) return;
+  input.value = String(
+    Math.max(
+      minimum,
+      Math.min(Math.trunc(value), scoreInputMaximum(r, source, a)),
+    ),
+  );
 }
