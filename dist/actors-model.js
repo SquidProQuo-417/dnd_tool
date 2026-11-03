@@ -15,6 +15,8 @@ export function createActor(kind, values = {}) {
     speed: "30 ft.",
     initiative: 0,
     level: 1,
+    rulesEdition: "2024",
+    generatedFeatures: "",
     className: "",
     ancestry: "",
     abilities: Object.fromEntries(abilityNames.map((a) => [a, 0])),
@@ -57,6 +59,13 @@ export function validateActor(r) {
     "notes",
   ])
     if (!text(r[field])) throw Error("Invalid character details.");
+  if (
+    r.rulesEdition !== undefined &&
+    !["2014", "2024"].includes(r.rulesEdition)
+  )
+    throw Error("Invalid rules edition.");
+  if (r.generatedFeatures !== undefined && !text(r.generatedFeatures, 500000))
+    throw Error("Invalid generated features.");
   if (r.sheetId !== null && !safeId(r.sheetId))
     throw Error("Invalid PDF reference.");
   if (

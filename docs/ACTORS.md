@@ -4,6 +4,14 @@ Projects start without records. Characters and Monsters have quick creators with
 
 PDF sheets can be attached (15 MB limit), stored in IndexedDB, viewed beside fields on wide panels, or opened separately. Entry from the PDF is manual; there is no PDF field extraction or OCR yet. Bytes are checked for a PDF header and stored as application/pdf.
 
+## Class and species choices
+
+Creation and editing include edition-specific Class and Species / ancestry dropdowns: all 12 SRD classes and 9 SRD species per edition. Choose Custom to enter homebrew names. Standard choices automatically populate a separate, collapsible Class / species features reference, including class proficiencies and traits. Class features update when level or edition changes; species text includes options such as lineages and subraces for the DM to choose. This reference is included in encounter snapshots.
+
+Custom features, notes, HP, AC and ability modifiers remain manually editable and are not overwritten by these choices. Skill selections, backgrounds, subclasses, spells, ability-score increases and optional lineage benefits are not automatically chosen or applied to numeric stats. This is a feature reference, not complete character-sheet calculation. The class/species reference is regenerated from selections; write custom additions in Features / source stat block.
+
+Run npm run build:characters to rebuild the option catalog from the bundled CC-licensed SRD indexes. Source pages appear with each feature; attribution is linked from the reference. Non-SRD books are outside the catalog.
+
 ## Monster presets
 
 The catalogs contain 296 SRD 5.1 monsters for 2014 and 330 SRD 5.2.1 monsters for 2024. This is SRD coverage, not every published book. Attribution is in dist/rules/ATTRIBUTION.txt, linked from the chooser. Copies retain their source edition and PDF page. HP and AC can be overridden during copying, and all fields remain editable afterward.

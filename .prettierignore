@@ -5,3 +5,4 @@ playwright-report/
 package-lock.json
 dist/rules/*.json
 dist/presets/*.json
+dist/character-options.js

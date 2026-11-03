@@ -300,3 +300,7 @@
     padding: 0.65rem 0.7rem;
   }
 }
+.actor-form .field[hidden],
+#dialog .field[hidden] {
+  display: none;
+}

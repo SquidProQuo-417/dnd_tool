@@ -1,4 +1,80 @@
 import { test, expect } from "@playwright/test";
+
+test("class and species choices fill level-aware features, preserve notes and allow homebrew", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await project(page);
+  await page.locator('[data-open-tool="Characters"]').click();
+  await page.locator('[data-create-actor="character"]').click();
+  const dialog = page.locator("#dialog");
+  await dialog.getByLabel("Name", { exact: true }).fill("Mira");
+  await dialog.getByLabel("Class", { exact: true }).selectOption("Fighter");
+  await dialog
+    .getByLabel("Species / ancestry", { exact: true })
+    .selectOption("Elf");
+  await dialog.getByRole("button", { name: "Create", exact: true }).click();
+  const form = page.locator("[data-edit-actor]");
+  const generated = form
+    .locator("details")
+    .filter({
+      has: page.locator("summary", { hasText: /^Class \/ species features$/ }),
+    });
+  await generated.locator("summary").click();
+  await expect(generated).toContainText("Second Wind");
+  await expect(generated).toContainText("Darkvision");
+  await expect(generated).not.toContainText("Level 2: Action Surge");
+  await form
+    .locator("summary")
+    .filter({ hasText: /^Features \/ source stat block$/ })
+    .click();
+  await form.locator("textarea[name=features]").fill("Custom feature");
+  await form.getByLabel("Level", { exact: true }).fill("2");
+  await form.getByLabel("Level", { exact: true }).press("Tab");
+  await expect(generated).toContainText("Level 2: Action Surge");
+  await expect(form.locator("textarea[name=features]")).toHaveValue(
+    "Custom feature",
+  );
+  await form.getByRole("button", { name: "Save", exact: true }).click();
+  await page.reload();
+  await expect(form.getByLabel("Class", { exact: true })).toHaveValue(
+    "Fighter",
+  );
+  await expect(
+    form.getByLabel("Species / ancestry", { exact: true }),
+  ).toHaveValue("Elf");
+  await expect(generated).toContainText("Level 2: Action Surge");
+  await form.getByLabel("Rules edition", { exact: true }).selectOption("2014");
+  await expect(generated).not.toContainText("Weapon Mastery");
+  await form
+    .getByLabel("Species / ancestry", { exact: true })
+    .selectOption("Half-Elf");
+  await form.getByLabel("Rules edition", { exact: true }).selectOption("2024");
+  await expect(
+    form.getByLabel("Species / ancestry", { exact: true }),
+  ).toHaveValue("");
+  await form.getByLabel("Class", { exact: true }).selectOption("__custom");
+  await expect(form.getByLabel("Custom class", { exact: true })).toBeVisible();
+  await form.getByLabel("Custom class", { exact: true }).fill("Star Weaver");
+  await form
+    .getByLabel("Species / ancestry", { exact: true })
+    .selectOption("__custom");
+  await form
+    .getByLabel("Custom species / ancestry", { exact: true })
+    .fill("Moonkin");
+  await form.getByRole("button", { name: "Save", exact: true }).click();
+  await page.reload();
+  await expect(form.getByLabel("Custom class", { exact: true })).toHaveValue(
+    "Star Weaver",
+  );
+  await expect(
+    form.getByLabel("Custom species / ancestry", { exact: true }),
+  ).toHaveValue("Moonkin");
+  await expect(form.locator("textarea[name=features]")).toHaveValue(
+    "Custom feature",
+  );
+  await expect(generated).toHaveCount(0);
+});
 async function project(page, name = "Test project") {
   await page
     .getByRole("button", { name: "New project", exact: false })

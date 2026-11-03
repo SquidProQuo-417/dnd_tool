@@ -1,6 +1,55 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { characterOptions } from "../dist/character-options.js";
+import { applyCharacterOptions } from "../dist/character-builder.js";
+
+test("edition-specific character options gate features by level without changing custom stats", () => {
+  for (const edition of ["2014", "2024"]) {
+    const options = characterOptions[edition];
+    assert.equal(options.classes.length, 12);
+    assert.equal(options.species.length, 9);
+    for (const cls of options.classes) {
+      assert.ok(cls.features.length > 0);
+      assert.ok(
+        cls.features.every((f) => f.level >= 1 && f.level <= 20 && f.page > 0),
+      );
+    }
+    const r = createActor("character", {
+      name: "Mira",
+      rulesEdition: edition,
+      className: "Fighter",
+      ancestry: "Elf",
+      maxHp: 37,
+      ac: 18,
+      features: "Custom feature",
+    });
+    applyCharacterOptions(r);
+    assert.match(r.generatedFeatures, /Second Wind/);
+    assert.match(r.generatedFeatures, /Darkvision/);
+    assert.doesNotMatch(r.generatedFeatures, /Action Surge/);
+    r.level = 2;
+    applyCharacterOptions(r);
+    assert.match(r.generatedFeatures, /Action Surge/);
+    r.level = 1;
+    applyCharacterOptions(r);
+    assert.doesNotMatch(r.generatedFeatures, /Action Surge/);
+    assert.equal(r.maxHp, 37);
+    assert.equal(r.ac, 18);
+    assert.equal(r.features, "Custom feature");
+    validateActor(r);
+    r.classNameCustom = true;
+    r.ancestryCustom = true;
+    applyCharacterOptions(r);
+    assert.equal(r.generatedFeatures, "");
+  }
+  assert.ok(
+    characterOptions["2014"].species.some((s) => s.name === "Half-Elf"),
+  );
+  assert.ok(
+    !characterOptions["2024"].species.some((s) => s.name === "Half-Elf"),
+  );
+});
 import {
   createActor,
   validateActor,
