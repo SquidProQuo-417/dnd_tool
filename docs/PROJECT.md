@@ -29,4 +29,4 @@ Browser storage is local to an origin and browser. Export files are the portable
 
 ## First-release limits
 
-The first implementation is a preparation foundation, not a complete rules library, player sheet or virtual tabletop. Boards and notes use plain text, with more editing formats planned. Real-time sharing, automated combat and player build recommendations are out of scope.
+The current implementation is a preparation foundation with optional structured character components, not a complete rules library, player sheet or virtual tabletop. Boards and notes use plain text, with more editing formats planned. Weapon and inventory calculators use manual settings; ammunition spending is explicit. Real-time sharing, automated combat and player build recommendations are out of scope.

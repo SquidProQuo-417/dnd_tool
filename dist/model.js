@@ -1,3 +1,4 @@
+import { validateComponentData } from "./components.js";
 export const uid = () => globalThis.crypto.randomUUID();
 export const categories = [
   "Sessions",
@@ -182,6 +183,17 @@ export function validateCampaign(p) {
       )
         throw Error("Invalid character component.");
       seen.add(m.id);
+      validateComponentData(m);
+    }
+    for (const m of c.components) {
+      if (
+        m.type === "Weapon" &&
+        m.data?.ammoId &&
+        !c.components.some(
+          (a) => a.id === m.data.ammoId && a.type === "Ammunition" && a.data,
+        )
+      )
+        throw Error("Invalid weapon ammunition reference.");
     }
   }
   for (const c of p.cards) {

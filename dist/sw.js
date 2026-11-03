@@ -1,9 +1,12 @@
-const CACHE = "waypoint-v1";
+const CACHE = "waypoint-v2";
 const FILES = [
   "./",
   "./index.html",
   "./app.js",
   "./model.js",
+  "./components.js",
+  "./component-ui.js",
+  "./roadmap.js",
   "./styles.css",
   "./icon.svg",
   "./manifest.webmanifest",

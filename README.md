@@ -15,7 +15,7 @@ Open http://127.0.0.1:4173. A demo campaign provides editable sample notes, char
 
 - Campaigns with a 2014/2024 edition setting.
 - Searchable notes with custom categories.
-- Modular character records: attach editable statistics, weapons, ammunition, inventory, spell requirements and notes.
+- Modular character records: calculated ability modifiers, weapon attack/damage buttons, linked ammunition, inventory weights and manual carrying limits, spell requirements, and notes. Legacy text stays intact when structured fields are added.
 - Multiple group memberships, through checkboxes or drag and drop.
 - Scrollable idea canvas, draggable cards, labeled arrow connections and live character references.
 - Uploaded raster reference images (3 MB per image), embedded in JSON exports.
@@ -23,7 +23,7 @@ Open http://127.0.0.1:4173. A demo campaign provides editable sample notes, char
 - Themes, fonts, text sizes, collapsible navigation/reference panels and a saved visibility layout.
 - Dice expressions, install manifest and an offline service worker.
 
-Rules content, combat, initiative, advanced docking, external windows and player mode are later milestones. The current rules page explicitly describes that status. Component values are editable text, not calculated character-sheet fields.
+Rules content, combat, initiative, advanced docking, external windows and player mode are later milestones. The current rules page explicitly describes that status. Structured components are generic calculators with manual settings, not a complete character-sheet rules engine.
 
 ## Files and privacy
 
@@ -48,3 +48,5 @@ Use `npm run format` to format application sources, documentation, and tests. No
 A private Sites project has been registered, but no source has been uploaded and no version has been published. Hosting synchronization needs separate authorization. The GitHub repository and local development workflow are independent of hosting.
 
 See [the project specification](docs/PROJECT.md) for agreed requirements and the milestone order.
+
+The published [roadmap and to-do list](docs/ROADMAP.md) is also available from **Roadmap** inside the app. See [calculation details](docs/MECHANICS.md) for structured component behavior and rule references.

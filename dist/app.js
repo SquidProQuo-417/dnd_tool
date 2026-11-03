@@ -1,3 +1,6 @@
+import { makeComponent, componentSummary } from "./components.js";
+import { componentEditor, bindStructuredComponents } from "./component-ui.js";
+import { roadmap } from "./roadmap.js";
 import {
   uid,
   categories,
@@ -49,8 +52,10 @@ const icons = {
   Characters: "♙",
   "Idea board": "◇",
   Rules: "▥",
+  Roadmap: "☷",
   Settings: "⚙",
 };
+const componentOpen = new Map();
 function notify(message) {
   $("#toast").textContent = message;
   $("#toast").classList.add("show");
@@ -131,6 +136,9 @@ function applyPrefs() {
   document.documentElement.style.fontSize = prefs.size + "px";
 }
 function render() {
+  document
+    .querySelectorAll("details[data-structured]")
+    .forEach((el) => componentOpen.set(el.dataset.structured, el.open));
   applyPrefs();
   $("#app").innerHTML =
     `<div class="shell ${prefs.sidebar ? "" : "hide-nav"} ${prefs.inspector ? "" : "hide-inspector"}"><aside class="sidebar"><a class="brand" href="#" data-action="home"><span class="brand-mark">➤</span> waypoint<span class="brand-dot">.</span></a><div class="workspace-label">YOUR WORKSPACE <span>LOCAL</span></div><label class="sr-only" for="campaign-select">Campaign</label><select id="campaign-select">${projects.map((p) => `<option value="${p.id}" ${p.id === project.id ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select><button class="new-campaign" data-action="new-campaign">＋ New campaign</button><div class="nav-label">CAMPAIGN</div><nav>${Object.entries(
@@ -152,6 +160,10 @@ function render() {
         .join("") || "<p>Add your first character to keep them close.</p>"
     }</div><div class="quiet-note"><span>✧</span><p>Leave a little space<br>for a better idea.</p></div></aside></div>`;
   bind();
+  document.querySelectorAll("details[data-structured]").forEach((el) => {
+    if (componentOpen.has(el.dataset.structured))
+      el.open = componentOpen.get(el.dataset.structured);
+  });
 }
 function heading(eyebrow, title, description, buttons = "") {
   return `<div class="page-heading"><div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${description}</p></div><div class="heading-actions">${buttons}</div></div>`;
@@ -162,6 +174,7 @@ function content() {
   if (view === "Characters") return charactersView();
   if (view === "Idea board") return boardView();
   if (view === "Settings") return settingsView();
+  if (view === "Roadmap") return roadmapView();
   return rulesView();
 }
 function overview() {
@@ -243,7 +256,7 @@ function charactersView() {
       )
       .join(
         "",
-      )}</div></section><section class="paper-editor">${c ? `<div class="editor-toolbar"><span class="eyebrow">MODULAR CHARACTER RECORD</span><button class="text-btn danger" data-action="delete-character">Delete</button></div><input id="character-name" class="title-input" aria-label="Character name" value="${esc(c.name)}"><input id="character-role" class="subtitle-input" aria-label="Character role" placeholder="Role, affiliation, first impression…" value="${esc(c.role)}"><div class="memberships"><span class="eyebrow">BELONGS TO</span>${project.groups.map((g) => `<label><input type="checkbox" data-membership="${g.id}" ${c.groupIds.includes(g.id) ? "checked" : ""}>${esc(g.name)}</label>`).join("") || "<small>Create a group to link this character.</small>"}</div><div class="component-palette"><span class="eyebrow">ATTACH A COMPONENT · CLICK OR DRAG BELOW</span><div>${["Statistics", "Weapon", "Ammunition", "Inventory", "Spell requirements", "Notes"].map((t) => `<button draggable="true" data-component="${t}">＋ ${t}</button>`).join("")}</div></div><div id="component-drop" class="components">${c.components.map((m) => `<details open class="component"><summary>${esc(m.type)}<span>⌄</span></summary><div><input data-component-label="${m.id}" aria-label="Component label" value="${esc(m.label)}"><textarea data-component-value="${m.id}" aria-label="${esc(m.type)} details" placeholder="Add details…">${esc(m.value)}</textarea><button class="text-btn danger" data-remove-component="${m.id}">Remove component</button></div></details>`).join("") || '<div class="empty">Drop a component here to build this character.</div>'}</div>` : '<div class="empty">Add a character to begin.</div>'}</section></div>`
+      )}</div></section><section class="paper-editor">${c ? `<div class="editor-toolbar"><span class="eyebrow">MODULAR CHARACTER RECORD</span><button class="text-btn danger" data-action="delete-character">Delete</button></div><input id="character-name" class="title-input" aria-label="Character name" value="${esc(c.name)}"><input id="character-role" class="subtitle-input" aria-label="Character role" placeholder="Role, affiliation, first impression…" value="${esc(c.role)}"><div class="memberships"><span class="eyebrow">BELONGS TO</span>${project.groups.map((g) => `<label><input type="checkbox" data-membership="${g.id}" ${c.groupIds.includes(g.id) ? "checked" : ""}>${esc(g.name)}</label>`).join("") || "<small>Create a group to link this character.</small>"}</div><div class="component-palette"><span class="eyebrow">ATTACH A COMPONENT · CLICK OR DRAG BELOW</span><div>${["Statistics", "Weapon", "Ammunition", "Inventory", "Spell requirements", "Notes"].map((t) => `<button draggable="true" data-component="${t}">＋ ${t}</button>`).join("")}</div></div><div id="component-drop" class="components">${c.components.map((m) => componentEditor(m, c, esc)).join("") || '<div class="empty">Drop a component here to build this character.</div>'}</div>` : '<div class="empty">Add a character to begin.</div>'}</section></div>`
   );
 }
 function boardView() {
@@ -267,7 +280,7 @@ function boardView() {
 }
 function cardHTML(c) {
   const char = project.characters.find((p) => p.id === c.characterId);
-  return `<article class="idea-card ${c.kind.toLowerCase()}" style="left:${c.x}px;top:${c.y}px" data-card="${c.id}"><div class="card-handle" data-handle="${c.id}"><span>${esc(c.kind.toUpperCase())}</span><span>⠿</span></div>${c.image ? `<img class="card-image" src="${esc(c.image)}" alt="Reference for ${esc(c.title)}">` : ""}<button class="card-content" data-edit-card="${c.id}"><h3>${esc(c.title)}</h3><p>${esc(c.body)}</p></button>${char ? `<details class="card-character"><summary>♙ ${esc(char.name)} <span>⌄</span></summary>${char.components.map((m) => `<div><strong>${esc(m.label)}</strong><p>${esc(m.value)}</p></div>`).join("") || "<p>No components yet.</p>"}<button class="text-btn" data-character="${char.id}">Open original ↗</button></details>` : ""}<div class="card-tools"><button data-upload="${c.id}">${c.image ? "Replace image" : "＋ Image"}</button><button data-edit-card="${c.id}">Edit ↗</button></div></article>`;
+  return `<article class="idea-card ${c.kind.toLowerCase()}" style="left:${c.x}px;top:${c.y}px" data-card="${c.id}"><div class="card-handle" data-handle="${c.id}"><span>${esc(c.kind.toUpperCase())}</span><span>⠿</span></div>${c.image ? `<img class="card-image" src="${esc(c.image)}" alt="Reference for ${esc(c.title)}">` : ""}<button class="card-content" data-edit-card="${c.id}"><h3>${esc(c.title)}</h3><p>${esc(c.body)}</p></button>${char ? `<details class="card-character"><summary>♙ ${esc(char.name)} <span>⌄</span></summary>${char.components.map((m) => `<div><strong>${esc(m.label)}</strong><p>${esc(componentSummary(char, m))}</p></div>`).join("") || "<p>No components yet.</p>"}<button class="text-btn" data-character="${char.id}">Open original ↗</button></details>` : ""}<div class="card-tools"><button data-upload="${c.id}">${c.image ? "Replace image" : "＋ Image"}</button><button data-edit-card="${c.id}">Edit ↗</button></div></article>`;
 }
 function rulesView() {
   return (
@@ -623,11 +636,17 @@ const actions = {
 function addComponent(type) {
   const c = project.characters.find((c) => c.id === selectedCharacter);
   if (!c) return;
-  c.components.push({ id: uid(), type, label: type, value: "" });
+  c.components.push(makeComponent(type));
   save();
   render();
 }
 function bind() {
+  bindStructuredComponents({
+    character: project.characters.find((c) => c.id === selectedCharacter),
+    save,
+    render,
+    notify,
+  });
   document
     .querySelectorAll("nav [data-view]")
     .forEach((el) => el.setAttribute("aria-label", el.dataset.view));
@@ -743,6 +762,13 @@ function bind() {
         c.components = c.components.filter(
           (m) => m.id !== el.dataset.removeComponent,
         );
+        c.components.forEach((m) => {
+          if (
+            m.type === "Weapon" &&
+            m.data?.ammoId === el.dataset.removeComponent
+          )
+            m.data.ammoId = null;
+        });
         save();
         render();
       }),
@@ -967,3 +993,31 @@ if ("serviceWorker" in navigator)
       notify("Offline cache unavailable. The app still works online."),
     );
 boot();
+
+function roadmapView() {
+  return (
+    heading(
+      "THE SHARED PROJECT PLAN",
+      "Where we go from here.",
+      "A published checklist of the work ahead. Current features are separate from future milestones.",
+    ) +
+    '<div class="roadmap-grid">' +
+    roadmap
+      .map(
+        (step, i) =>
+          '<section class="roadmap-step ' +
+          (step.status === "Complete" ? "complete" : "") +
+          '"><div class="roadmap-step-heading"><span class="step-number">' +
+          (i + 1) +
+          '</span><span class="pill">' +
+          esc(step.status) +
+          "</span></div><h2>" +
+          esc(step.title) +
+          "</h2><ul>" +
+          step.items.map((item) => "<li>" + esc(item) + "</li>").join("") +
+          "</ul></section>",
+      )
+      .join("") +
+    '</div><p class="muted">No accounts or simultaneous editing are planned. Campaign sharing uses file handoff. Hosting remains unpublished; this roadmap travels with the application and is also tracked in GitHub.</p>'
+  );
+}

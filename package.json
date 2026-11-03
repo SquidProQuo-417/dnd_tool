@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/serve.mjs",
-    "test": "node --test tests/model.test.js",
+    "test": "node --test tests/model.test.js tests/components.test.js",
     "test:browser": "playwright test",
     "format": "prettier --write dist scripts tests docs README.md package.json playwright.config.js",
-    "check": "node --check dist/app.js && node --check dist/model.js"
+    "check": "node --check dist/app.js && node --check dist/model.js && node --check dist/components.js && node --check dist/component-ui.js && node --check dist/roadmap.js && node --check dist/sw.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

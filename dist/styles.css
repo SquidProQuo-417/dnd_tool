@@ -1515,3 +1515,205 @@ dialog::backdrop {
     scroll-behavior: auto !important;
   }
 }
+
+/* Structured records stay usable within a narrow character panel. */
+.structured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0 1rem;
+  margin-top: 0.6rem;
+}
+.structured-grid .field {
+  margin: 0.7rem 0;
+}
+.structured-grid input,
+.structured-grid select {
+  padding: 0.6rem;
+  font-size: 0.8rem;
+}
+.ability-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1.2rem 0;
+}
+.ability-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem 0.3rem;
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  background: var(--soft);
+}
+.ability-field input {
+  padding: 0.4rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px;
+  width: 100%;
+  text-align: center;
+  background: var(--paper);
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+.ability-field output {
+  font-size: 1rem;
+  color: var(--accent);
+  letter-spacing: 0;
+  font-weight: 600;
+}
+.check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin: 0.9rem 0;
+}
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+}
+.check-field input {
+  width: auto !important;
+}
+.component .field > input {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.6rem;
+  font-size: 0.8rem;
+}
+.derived-summary {
+  border: 1px solid var(--border);
+  padding: 0.9rem;
+  background: var(--soft);
+  border-radius: 5px;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.roll-actions,
+.resource-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.resource-actions strong {
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+.component-roll {
+  display: block;
+  color: var(--accent);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  min-height: 1.7rem;
+}
+.inventory-item {
+  display: grid;
+  grid-template-columns:
+    minmax(100px, 2fr) minmax(65px, 1fr) minmax(65px, 1fr)
+    20px;
+  gap: 0.5rem;
+  align-items: center;
+}
+.inventory-item .field {
+  margin: 0.6rem 0;
+}
+.inventory-item input {
+  width: 100%;
+}
+.inventory-item .danger {
+  font-size: 1.1rem;
+}
+.weight-summary {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1.3rem;
+}
+.weight-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  margin-bottom: 0.6rem;
+}
+.weight-summary span {
+  color: var(--muted);
+}
+.weight-summary progress {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: var(--accent);
+}
+.over-limit {
+  color: #b3604c;
+}
+.over-limit progress {
+  accent-color: #b3604c;
+}
+.upgrade-component {
+  display: block;
+  margin: 1rem 0;
+}
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.roadmap-step {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 1.4rem;
+  background: var(--paper);
+}
+.roadmap-step.complete {
+  background: var(--soft);
+}
+.roadmap-step-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.3rem;
+}
+.step-number {
+  font-family: Georgia, serif;
+  font-size: 1.5rem;
+  color: var(--muted);
+}
+.roadmap-step h2 {
+  font-family: Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.roadmap-step ul {
+  padding-left: 1.1rem;
+  margin-bottom: 0;
+  font-size: 0.76rem;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.roadmap-step li {
+  margin: 0.5rem 0;
+}
+@media (max-width: 1000px) {
+  .ability-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .inventory-item {
+    grid-template-columns:
+      minmax(100px, 2fr) minmax(65px, 1fr) minmax(65px, 1fr)
+      20px;
+  }
+  .structured-grid {
+    grid-template-columns: 1fr;
+  }
+}
