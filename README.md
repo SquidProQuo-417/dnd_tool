@@ -41,4 +41,10 @@ npm run test:browser
 
 Browser tests default to installed Microsoft Edge on Windows. Change the Playwright `channel` for another installed browser. Tests cover persistence, component editing, memberships, card dragging, uploads, connections, JSON handoff, dice and responsive widths. Generated screenshots and test output are ignored by Git.
 
+Use `npm run format` to format application sources, documentation, and tests. No build step is required. When changing cached application files for a release, increment the cache version in `dist/sw.js`.
+
+## Hosting status
+
+A private Sites project has been registered, but no source has been uploaded and no version has been published. Hosting synchronization needs separate authorization. The GitHub repository and local development workflow are independent of hosting.
+
 See [the project specification](docs/PROJECT.md) for agreed requirements and the milestone order.

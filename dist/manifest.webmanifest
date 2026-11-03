@@ -1,1 +1,17 @@
-{"name":"Waypoint Campaign Workspace","short_name":"Waypoint","start_url":"./","scope":"./","display":"standalone","background_color":"#f5f3ed","theme_color":"#172523","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
+{
+  "name": "Waypoint Campaign Workspace",
+  "short_name": "Waypoint",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f3ed",
+  "theme_color": "#172523",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
