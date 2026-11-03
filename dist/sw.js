@@ -1,9 +1,16 @@
-const CACHE = "waypoint-shell-v1";
+const CACHE = "waypoint-shell-v2";
 const FILES = [
   "./",
   "./index.html",
   "./shell.js",
   "./shell.css",
+  "./actors.css",
+  "./actors-model.js",
+  "./actors-store.js",
+  "./actors-ui.js",
+  "./presets/monsters-2014.json",
+  "./presets/monsters-2024.json",
+  "./rules/ATTRIBUTION.txt",
   "./workspace-model.js",
   "./workspace-ui.js",
   "./styles.css",

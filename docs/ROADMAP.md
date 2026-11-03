@@ -1,6 +1,6 @@
 # Waypoint roadmap
 
-## Current direction: shell only
+## Current direction: minimal workspace
 
 - [x] Empty startup without seeded projects or records.
 - [x] Persistent green navigation toggle and a stable expanding workspace.
@@ -8,7 +8,18 @@
 - [x] No decorative copy, campaign sidebar, or content-filled overview.
 - [x] Preserve existing records and previous preferences separately.
 
-Content features are on hold. The sections below record previous implementation work and longer-term scope; those features are not loaded by the current shell. Homebrew remains deferred.
+## Current implementation: characters, monsters and encounter health
+
+- [x] Quick character creation with HP, AC and ability modifiers; additional editable details.
+- [x] PDF attachment and local viewing with manual stat entry.
+- [x] Custom monsters and editable copies of 296 SRD 5.1 / 330 SRD 5.2.1 presets.
+- [x] Drag records into Encounter; independent instances and manual health controls.
+- [x] Add HP / Damage amount, temporary HP, undo, combat-stat overrides and local persistence.
+- [ ] Automatic PDF field extraction with review.
+- [ ] Portable export/import for the new record store, including attachments.
+- [ ] Full initiative/turn tracking and battlefield.
+
+Other feature panels stay blank. Sections below include historical work and longer-term scope. Homebrew remains deferred.
 
 This is the shared project to-do list. Status reflects implemented behavior, not just planned screens.
 

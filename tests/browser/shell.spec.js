@@ -12,7 +12,7 @@ test("fresh shell contains no project, sample content or populated tool panels",
   await expect(page.locator("body")).not.toContainText("Your next adventure");
   await expect(page.locator(".inspector")).toHaveCount(0);
   await expect(page.locator("footer")).toHaveCount(0);
-  for (const tool of ["Notes", "Characters", "Idea board", "Rules", "Dice"]) {
+  for (const tool of ["Notes", "Idea board", "Rules", "Dice"]) {
     await page.locator(`[data-open-tool="${tool}"]`).click();
     await expect(page.locator("[data-panel-tool]")).toHaveText("");
   }

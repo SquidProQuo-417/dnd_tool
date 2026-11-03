@@ -1,4 +1,5 @@
 import { WorkspacePanels } from "./workspace-ui.js";
+import { ActorsUI } from "./actors-ui.js";
 import { tools, validateWorkspace } from "./workspace-model.js";
 const $ = (s) => document.querySelector(s);
 const esc = (v) =>
@@ -29,6 +30,8 @@ const icons = {
   Overview: "◈",
   Notes: "▤",
   Characters: "♙",
+  Monsters: "♜",
+  Encounter: "⚔",
   "Idea board": "◇",
   Rules: "▥",
   Dice: "⚄",
@@ -79,11 +82,27 @@ const dock = new WorkspacePanels({
   notify,
   onFocus: () => {},
 });
+const actors = new ActorsUI({
+  esc,
+  modal,
+  notify,
+  render,
+  projectId: () => prefs.projectId,
+  openTool: (tool) => {
+    dock.route(tool);
+    render();
+  },
+  newProject: () => $("#new-project").click(),
+});
 function render() {
   dock.capture();
   const project = prefs.projects.find((p) => p.id === prefs.projectId);
   const workspace = dock
-    .html(() => '<div class="empty-tool"></div>')
+    .html((tool) =>
+      ["Characters", "Monsters", "Encounter"].includes(tool)
+        ? actors.html(tool)
+        : '<div class="empty-tool"></div>',
+    )
     .replace(
       /<div class="dock-empty">[\s\S]*?<\/div>/,
       '<div class="empty-workspace" aria-label="Empty workspace"></div>',
@@ -130,6 +149,7 @@ function render() {
     dock.commit(layout);
   };
   dock.bind();
+  actors.bind();
   const manage = $("#manage-workspaces"),
     openManager = manage.onclick;
   manage.onclick = () => {

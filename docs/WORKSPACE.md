@@ -1,6 +1,6 @@
 # Workspace shell
 
-Startup is empty. Tools open blank panels; they do not load campaign content.
+Startup is empty. Characters, Monsters and Encounter have record controls; other tools open blank panels. Records appear only after the user adds them.
 
 ## Navigation
 
@@ -18,4 +18,4 @@ Save layout stores a named arrangement on this device. Layouts loads or deletes 
 
 The shell stores preferences under waypoint-shell-settings. Existing IndexedDB campaigns and waypoint-settings preferences remain untouched. New projects contain only user-entered names and layouts; they contain no seeded campaign records.
 
-Floating windows, walkthroughs, and populated tools are not active in this shell stage.
+Floating windows and walkthroughs are not active. See ACTORS.md for character creation, monster presets, PDF attachments and encounter health controls.

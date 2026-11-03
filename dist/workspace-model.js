@@ -3,6 +3,8 @@ export const tools = [
   "Overview",
   "Notes",
   "Characters",
+  "Monsters",
+  "Encounter",
   "Idea board",
   "Rules",
   "Dice",

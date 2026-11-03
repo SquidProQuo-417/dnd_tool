@@ -1,8 +1,8 @@
 # Waypoint · project specification
 
-## Current scope: empty shell
+## Current scope: minimal workspace and record tools
 
-The current entry point is an empty workspace shell. No demo project, campaign records, rulebook, tool content, promotional text, or onboarding content is displayed. Only navigation, project names entered by the user, blank panels, and layout controls are active. Existing stored campaign data and earlier feature modules are retained without being loaded. The requirements below remain future scope rather than current product content.
+The entry point starts empty with no demo project or seeded records. Characters, Monsters and Encounter now provide user-requested creation, editable SRD presets, PDF viewing and independent encounter health controls. Other tool panels stay blank. Promotional wording and onboarding are not displayed. Existing legacy campaigns and preferences remain intact. Broader requirements below remain future scope.
 
 A local-first, installable D&D preparation workspace. DM preparation is the first milestone. No accounts, simultaneous editing, or automatic combat enforcement.
 
