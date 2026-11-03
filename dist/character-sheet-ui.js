@@ -92,6 +92,10 @@ export function readSheet(form, r) {
       scoreAbilities.map((a) => [a, Number(d.get("save-bonus-" + a) || 0)]),
     );
   }
+  return readInventorySheet(form, r);
+}
+export function readInventorySheet(form, r) {
+  const d = new FormData(form);
   if (d.has("coin-gp"))
     r.wallet = Object.fromEntries(
       coins.map((c) => [c, Number(d.get("coin-" + c))]),

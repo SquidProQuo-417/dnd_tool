@@ -1,5 +1,52 @@
 import { test, expect } from "@playwright/test";
 
+test("equipment buttons open a template picker without a standard class or background", async ({
+  page,
+}) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "New project", exact: false })
+    .first()
+    .click();
+  await page
+    .getByLabel("Project name", { exact: true })
+    .fill("Equipment templates");
+  await page.getByRole("button", { name: "Create", exact: true }).click();
+  await page.locator('[data-open-tool="Characters"]').click();
+  await page.locator('[data-create-actor="character"]').click();
+  const dialog = page.locator("#dialog");
+  await dialog.getByLabel("Name", { exact: true }).fill("Unassigned");
+  await dialog.getByRole("button", { name: "Create", exact: true }).click();
+  const form = page.locator("[data-edit-actor]");
+  await form.locator("[data-equipment-section] > summary").click();
+  await form.locator("[data-load-equipment=class]").click();
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByLabel("Equipment class", { exact: true })
+    .selectOption("Monk");
+  await dialog.getByRole("button", { name: "Preview", exact: true }).click();
+  await expect(
+    dialog.getByLabel("Equipment package", { exact: true }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Load", exact: true }).click();
+  await expect(form.locator("[name=coin-gp]")).toHaveValue("11");
+  await expect(form.getByLabel("Class", { exact: true })).toHaveValue("");
+  await form.locator("[data-load-equipment=background]").click();
+  await dialog
+    .getByLabel("Equipment background", { exact: true })
+    .selectOption("Sage");
+  await dialog.getByRole("button", { name: "Preview", exact: true }).click();
+  await dialog.getByRole("button", { name: "Load", exact: true }).click();
+  await expect(form.locator("[name=coin-gp]")).toHaveValue("19");
+  await expect(form.getByLabel("Background", { exact: true })).toHaveValue("");
+  await form.getByRole("button", { name: "Save", exact: true }).click();
+  await page.reload();
+  await expect(form.locator("[name=coin-gp]")).toHaveValue("19");
+  expect(errors).toEqual([]);
+});
+
 test("score limits prevent invalid allocations, homebrew stays locked and inventory ignores unrelated score errors", async ({
   page,
 }) => {
@@ -78,6 +125,7 @@ test("score limits prevent invalid allocations, homebrew stays locked and invent
   await form
     .locator("[name=score-background-WIS]")
     .evaluate((el) => (el.value = "2"));
+  await form.evaluate((el) => el.oninput());
   await form.locator("[data-equipment-section] > summary").click();
   await form.locator("[data-load-equipment=class]").click();
   await dialog.getByRole("button", { name: "Load", exact: true }).click();

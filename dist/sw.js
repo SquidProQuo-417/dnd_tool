@@ -1,4 +1,4 @@
-const CACHE = "waypoint-shell-v6";
+const CACHE = "waypoint-shell-v7";
 const FILES = [
   "./",
   "./index.html",

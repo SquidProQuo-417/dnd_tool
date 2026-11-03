@@ -22,6 +22,8 @@ Existing records without score data keep their original modifiers. Their editabl
 
 Equipment has separate loaders for class and background. The preview offers 2024 package choices or 2014 equipment alternatives and editable item names, quantities and coins. Open-ended choices such as a musical instrument can be resolved in that preview. Packs remain inventory items; their contents are not unpacked and weapon statistics are not automatically created. Manual Add item, quantity edits and removal are available.
 
+Equipment buttons bind independently of score controls and read only equipment-related form fields. Missing or unrecognized class/background selections open a standard template picker instead of ending at a notification. Choosing a template loads its equipment without changing the character's class, background or rules edition.
+
 Loading the same source again replaces its tagged inventory and reconciles its previous coin grant, preserving manual items and the other source. If replacing a grant would make a denomination negative, the operation is rejected without changing the record. Equipment and wallet values are saved with the character and copied into encounter snapshots. Currency tracks PP, GP, EP, SP and CP without automatically converting denominations, plus a GP-equivalent total.
 
 Equipment loading and inventory draft changes validate only inventory, currency and grants. An unfinished or invalid ability allocation does not produce an error in the equipment modal. Saving the complete character still validates its scores in the main form.

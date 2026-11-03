@@ -6,6 +6,7 @@ import {
   readSheet,
   updateSheetOutputs,
   constrainScoreInput,
+  readInventorySheet,
 } from "./character-sheet-ui.js";
 import {
   syncScores,
@@ -25,6 +26,7 @@ import {
   bindCharacterChoices,
 } from "./character-builder.js";
 import { ActorStore } from "./actors-store.js";
+import { characterOptions } from "./character-options.js";
 import { renderCharacterFeatures } from "./character-features.js";
 import { renderReference } from "./rule-content.js";
 import {
@@ -182,6 +184,7 @@ export class ActorsUI {
     );
   }
   bindSheetControls(form, record, onDraft) {
+    this.bindEquipmentControls(form, record);
     const update = () => {
       const next = this.readForm(form, record);
       onDraft(next);
@@ -235,16 +238,36 @@ export class ActorsUI {
           if (status) status.textContent = "Unsaved";
         }),
     );
-    form
-      .querySelectorAll("[data-load-equipment]")
-      .forEach(
-        (b) =>
-          (b.onclick = () =>
-            this.loadEquipment(
-              this.readForm(form, record),
-              b.dataset.loadEquipment,
-            )),
-      );
+  }
+  equipmentDraft(form, record) {
+    const next = structuredClone({
+      ...record,
+      ...(this.drafts.get(record.id) || {}),
+    });
+    const fields = new FormData(form);
+    if (fields.has("rulesEdition"))
+      next.rulesEdition = fields.get("rulesEdition");
+    for (const key of ["className", "background"])
+      if (fields.has(key + "Choice")) {
+        next[key + "Custom"] = fields.get(key + "Choice") === "__custom";
+        next[key] = next[key + "Custom"]
+          ? fields.get(key)
+          : fields.get(key + "Choice");
+      }
+    return readInventorySheet(form, next);
+  }
+  bindEquipmentControls(form, record) {
+    const update = () => this.equipmentDraft(form, record);
+    form.querySelectorAll("[data-load-equipment]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          try {
+            this.loadEquipment(update(), b.dataset.loadEquipment);
+          } catch (error) {
+            this.notify("Equipment: " + error.message);
+          }
+        }),
+    );
     form.querySelectorAll("[data-remove-inventory]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -291,14 +314,52 @@ export class ActorsUI {
       )
       ?.setAttribute("open", "");
   }
-  loadEquipment(record, source) {
-    const text = equipmentText(record, source);
-    if (!text)
-      return this.notify(
-        "Choose a standard " +
-          source +
-          " first. Custom equipment can be added with Add item.",
-      );
+  chooseEquipmentTemplate(record, source) {
+    const edition = record.rulesEdition || "2024";
+    this.modal(
+      "Starting equipment",
+      `<label class="field">Rules edition<select name="equipment-edition" aria-label="Equipment rules edition"><option ${edition === "2024" ? "selected" : ""}>2024</option><option ${edition === "2014" ? "selected" : ""}>2014</option></select></label><label class="field">${source === "class" ? "Class" : "Background"}<select name="equipment-template" aria-label="Equipment ${source}" required></select></label>`,
+      (fields) => {
+        const name = fields.get("equipment-template");
+        if (!name) throw Error("Select a " + source + ".");
+        const template = {
+          ...record,
+          rulesEdition: fields.get("equipment-edition"),
+          ...(source === "class"
+            ? { className: name, classNameCustom: false }
+            : { background: name, backgroundCustom: false }),
+        };
+        this.loadEquipment(record, source, template);
+        return false;
+      },
+      "Preview",
+    );
+    const form = document.querySelector("#dialog form");
+    const populate = () => {
+      const options =
+        characterOptions[form.elements["equipment-edition"].value][
+          source === "class" ? "classes" : "backgrounds"
+        ];
+      const current = String(
+        record[source === "class" ? "className" : "background"] || "",
+      )
+        .trim()
+        .toLowerCase();
+      form.elements["equipment-template"].innerHTML =
+        '<option value="">Select</option>' +
+        options
+          .map(
+            (o) =>
+              `<option value="${this.esc(o.name)}" ${o.name.toLowerCase() === current ? "selected" : ""}>${this.esc(o.name)}</option>`,
+          )
+          .join("");
+    };
+    form.elements["equipment-edition"].onchange = populate;
+    populate();
+  }
+  loadEquipment(record, source, template = record) {
+    const text = equipmentText(template, source);
+    if (!text) return this.chooseEquipmentTemplate(record, source);
     const packages = equipmentPackages(text),
       groups = [],
       fixed = [];
