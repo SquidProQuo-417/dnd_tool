@@ -9,7 +9,7 @@
     "build:rules": "node scripts/build-rules.mjs",
     "test:browser": "playwright test",
     "format": "prettier --write dist scripts tests docs README.md package.json playwright.config.js",
-    "check": "node --check dist/app.js && node --check dist/model.js && node --check dist/components.js && node --check dist/component-ui.js && node --check dist/roadmap.js && node --check dist/sw.js && node --check dist/rules-model.js && node --check dist/rules-ui.js && node --check dist/workspace-model.js && node --check dist/workspace-ui.js"
+    "check": "node --check dist/shell.js && node --check dist/sw.js && node --check dist/workspace-model.js && node --check dist/workspace-ui.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

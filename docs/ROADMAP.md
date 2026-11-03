@@ -1,5 +1,15 @@
 # Waypoint roadmap
 
+## Current direction: shell only
+
+- [x] Empty startup without seeded projects or records.
+- [x] Persistent green navigation toggle and a stable expanding workspace.
+- [x] Blank tool panels with docking, resizing, priorities and named layouts.
+- [x] No decorative copy, campaign sidebar, or content-filled overview.
+- [x] Preserve existing records and previous preferences separately.
+
+Content features are on hold. The sections below record previous implementation work and longer-term scope; those features are not loaded by the current shell. Homebrew remains deferred.
+
 This is the shared project to-do list. Status reflects implemented behavior, not just planned screens.
 
 ## Completed: preparation foundation

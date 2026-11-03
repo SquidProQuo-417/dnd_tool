@@ -1,58 +1,23 @@
-# Waypoint
+# Waypoint workspace shell
 
-A local-first Dungeons & Dragons preparation workspace. Built as a dependency-free static web app; Node is needed only for development and tests.
+The current application is intentionally empty. It provides navigation, projects by name, blank tool tabs, docking, resizing, visibility priorities, and named layouts. No campaigns, notes, characters, rules, or other content are seeded or displayed.
 
-## Run locally
+## Run
 
-```sh
-npm install
-npm run dev
-```
+Run npm install, then npm run dev. Open http://127.0.0.1:4173. On Windows, use npm.cmd if PowerShell blocks npm.
 
-Open http://127.0.0.1:4173. A demo campaign provides editable sample notes, characters and cards. Use **New campaign** for an empty project.
+## Controls
 
-## Included in this milestone
+- The green navigation toggle remains visible when the sidebar collapses.
+- Open a blank tool from navigation or Open a tool.
+- Drag tabs to reorder, merge, or dock; drag dividers to resize.
+- Panel … menus control priority, tab placement, collapse, and hiding.
+- Save layout and Layouts save, restore, reset, or recover arrangements.
 
-- Campaigns with a 2014/2024 edition setting.
-- Searchable notes with custom categories.
-- Modular character records: calculated ability modifiers, weapon attack/damage buttons, linked ammunition, inventory weights and manual carrying limits, spell requirements, and notes. Legacy text stays intact when structured fields are added.
-- Multiple group memberships, through checkboxes or drag and drop.
-- Scrollable idea canvas, draggable cards, labeled arrow connections and live character references.
-- Uploaded raster reference images (3 MB per image), embedded in JSON exports.
-- IndexedDB autosave, previous-save recovery and validated imports that create separate campaigns.
-- Movable tool tabs, docked split panels, resize dividers, visibility priorities, hide/restore controls, and named saved layouts with reset/recovery.
-- Themes, fonts, text sizes, and collapsible navigation/reference panels.
-- Dice expressions, install manifest and an offline service worker.
-- Searchable 2014/2024 SRD rules library with topic hierarchy, edition switching, bookmarks, recent topics, source-page links, and bundled PDFs.
-
-Homebrew overlays, standard equipment presets, combat, initiative, freely floating panels, external windows and player mode are later milestones. The reference includes SRD content rather than every published rulebook. Structured components are generic calculators with manual settings, not a complete character-sheet rules engine.
-
-## Files and privacy
-
-Data stays in this browser’s IndexedDB. **Export campaign** downloads a versioned JSON file including all images and DM content. Import creates a separate campaign rather than merging or overwriting. Keep exports before clearing browser data or moving computers. Imports are limited to 25 MB. Uploaded images must be PNG, JPEG, WebP or GIF.
-
-Install support varies by browser/platform. Open once online to cache app files and both reference editions (roughly 13 MB). Localhost and HTTPS support offline/install features. There are no accounts, analytics, remote fonts or runtime dependencies.
+The shell uses a separate local-storage namespace. Existing campaign data and previous preferences remain untouched. Previous feature modules remain in the repository but are not loaded by the shell entry point.
 
 ## Verification
 
-```sh
-npm test
-npm run check
-npm run test:browser
-```
+Run npm test, npm run check, and npm run test:browser. Browser checks target the current shell and use installed Microsoft Edge. Earlier feature UI tests are retained as historical tests and are not the active browser suite. Pure model tests remain available.
 
-Browser tests default to installed Microsoft Edge on Windows. Change the Playwright `channel` for another installed browser. Tests cover persistence, component editing, memberships, card dragging, uploads, connections, JSON handoff, dice and responsive widths. Generated screenshots and test output are ignored by Git.
-
-Use `npm run format` to format application sources, documentation, and tests. No build step is required. When changing cached application files for a release, increment the cache version in `dist/sw.js`.
-
-## Hosting status
-
-A private Sites project has been registered, but no source has been uploaded and no version has been published. Hosting synchronization needs separate authorization. The GitHub repository and local development workflow are independent of hosting.
-
-See [the project specification](docs/PROJECT.md) for agreed requirements and the milestone order.
-
-The published [roadmap and to-do list](docs/ROADMAP.md) is also available from **Roadmap** inside the app. See [calculation details](docs/MECHANICS.md) for structured component behavior and rule references.
-
-See [rules-library coverage and maintenance](docs/RULES-LIBRARY.md) for source attribution, extraction limits, and instructions for rebuilding the index.
-
-See [workspace controls](docs/WORKSPACE.md) for docking, tab movement, visibility priorities, named layouts, and layout recovery.
+The active entry point is dist/shell.js. No build step is required. Use npm run format for formatting. A hosted deployment has not been published.

@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/browser",
+  testMatch: "shell.spec.js",
   workers: 1,
   use: {
     channel: "msedge",
