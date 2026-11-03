@@ -1,3 +1,4 @@
+import { newScoreSetup, syncScores, validateSheet } from "./character-sheet.js";
 export const abilityNames = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
 export const emptyActors = () => ({
   version: 1,
@@ -6,7 +7,7 @@ export const emptyActors = () => ({
   participants: [],
 });
 export function createActor(kind, values = {}) {
-  return {
+  const actor = {
     id: crypto.randomUUID(),
     kind,
     name: "",
@@ -30,6 +31,9 @@ export function createActor(kind, values = {}) {
     source: null,
     ...values,
   };
+  if (kind === "character" && !values.abilities && !values.scoreSetup)
+    actor.scoreSetup = newScoreSetup();
+  return syncScores(actor);
 }
 const integer = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
 const text = (v, max = 100000) => typeof v === "string" && v.length <= max;
@@ -97,6 +101,7 @@ export function validateActor(r) {
       !text(r.source.name, 200))
   )
     throw Error("Invalid preset reference.");
+  validateSheet(r);
   return r;
 }
 export function validateActors(data) {

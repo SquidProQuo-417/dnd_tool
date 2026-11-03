@@ -193,7 +193,17 @@ for (const edition of ["2014", "2024"]) {
     )
     .filter((e) => e.text)
     .map(block);
-  catalog[edition] = { classes: classData, species, feats };
+  const backgrounds = entries
+    .filter((e) =>
+      edition === "2024"
+        ? e.sourcePath.length === 4 &&
+          e.sourcePath[2] === "Background Descriptions"
+        : e.sourcePath.length === 3 &&
+          e.sourcePath[1] === "Backgrounds" &&
+          e.title === "Acolyte",
+    )
+    .map((e) => ({ name: e.title, ...block(e) }));
+  catalog[edition] = { classes: classData, species, feats, backgrounds };
 }
 fs.writeFileSync(
   "dist/character-options.js",

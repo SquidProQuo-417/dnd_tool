@@ -205,8 +205,10 @@ async function character(page) {
   await dialog.getByLabel("Name", { exact: true }).fill("Asha");
   await dialog.getByLabel("Maximum HP", { exact: true }).fill("30");
   await dialog.getByLabel("AC", { exact: true }).fill("16");
-  await dialog.getByText("Ability modifiers", { exact: true }).click();
-  await dialog.getByLabel("STR", { exact: true }).fill("3");
+  await dialog
+    .getByLabel("Score method", { exact: true })
+    .selectOption("manual");
+  await dialog.getByLabel("STR base score", { exact: true }).fill("16");
   await dialog.getByRole("button", { name: "Create", exact: true }).click();
   await expect(page.locator(".actor-list")).toContainText("Asha");
 }

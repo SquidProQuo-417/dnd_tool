@@ -1,4 +1,23 @@
 import {
+  renderScores,
+  renderSaves,
+  renderCurrency,
+  renderInventory,
+  readSheet,
+  updateSheetOutputs,
+} from "./character-sheet-ui.js";
+import {
+  syncScores,
+  savingThrows,
+  signed,
+  scoreAbilities,
+  equipmentText,
+  equipmentPackages,
+  equipmentPlan,
+  applyEquipment,
+  coins,
+} from "./character-sheet.js";
+import {
   characterFields,
   readCharacterChoices,
   bindCharacterChoices,
@@ -111,8 +130,8 @@ export class ActorsUI {
       pdf = this.pdfs.get(record.sheetId);
     if (record.sheetId && this.preview.has(record.id) && !pdf)
       this.loadPdf(record);
-    return `<form class="actor-form" data-edit-actor="${record.id}" data-edit-kind="${record.kind}"><div class="actor-editor-toolbar"><button class="primary" type="submit">Save</button><span class="actor-save-state" role="status">${this.drafts.has(record.id) ? "Unsaved" : "Saved"}</span><button class="secondary" type="button" data-add-actor="${record.id}">Add to encounter</button><button class="text-btn danger" type="button" data-delete-actor="${record.id}">Delete</button></div>${this.input("name", "Name", r.name)}<div class="actor-basic-grid">${this.input("maxHp", "Maximum HP", r.maxHp, "number", 1)}${this.input("ac", "AC", r.ac, "number", 0, 100)}${this.input("initiative", "Initiative modifier", r.initiative, "number", -100, 100)}${this.input("speed", "Speed", r.speed)}</div>${record.kind === "character" ? `<details class="actor-section" open><summary>Character</summary>${characterFields(r, esc)}</details>` : ""}${record.kind === "character" && renderCharacterFeatures(r, esc) ? `<details class="actor-section" data-feature-section><summary>Class / species features</summary>${renderCharacterFeatures(r, esc)}</details>` : ""}<details class="actor-section" open><summary>Ability modifiers</summary>${this.abilities(r.abilities)}</details>${[
-      ["saves", "Saving throws"],
+    return `<form class="actor-form" data-edit-actor="${record.id}" data-edit-kind="${record.kind}"><div class="actor-editor-toolbar"><button class="primary" type="submit">Save</button><span class="actor-save-state" role="status">${this.drafts.has(record.id) ? "Unsaved" : "Saved"}</span><button class="secondary" type="button" data-add-actor="${record.id}">Add to encounter</button><button class="text-btn danger" type="button" data-delete-actor="${record.id}">Delete</button></div>${this.input("name", "Name", r.name)}<div class="actor-basic-grid">${this.input("maxHp", "Maximum HP", r.maxHp, "number", 1)}${this.input("ac", "AC", r.ac, "number", 0, 100)}${this.input("initiative", "Initiative modifier", r.initiative, "number", -100, 100)}${this.input("speed", "Speed", r.speed)}</div>${record.kind === "character" ? `<details class="actor-section" open><summary>Character</summary>${characterFields(r, esc)}</details>` : ""}${record.kind === "character" && renderCharacterFeatures(r, esc) ? `<details class="actor-section" data-feature-section><summary>Class / species features</summary>${renderCharacterFeatures(r, esc)}</details>` : ""}${record.kind === "character" ? `<details class="actor-section" open data-score-section><summary>Ability scores</summary>${renderScores(r, esc)}</details><details class="actor-section" data-saves-section><summary>Saving throws</summary>${renderSaves(r, esc)}</details><details class="actor-section" data-equipment-section><summary>Equipment</summary>${renderInventory(r, esc)}</details><details class="actor-section"><summary>Currency</summary>${renderCurrency(r)}</details>` : `<details class="actor-section" open><summary>Ability modifiers</summary>${this.abilities(r.abilities)}</details>`}${[
+      ...(record.kind === "monster" ? [["saves", "Saving throws"]] : []),
       ["skills", "Skills"],
       ["attacks", "Weapons / attacks"],
       ["features", "Features / source stat block"],
@@ -128,7 +147,7 @@ export class ActorsUI {
   }
   readForm(form, record) {
     const d = new FormData(form),
-      out = { ...record };
+      out = { ...record, ...(this.drafts.get(record.id) || {}) };
     for (const key of [
       "name",
       "speed",
@@ -148,7 +167,10 @@ export class ActorsUI {
       if (d.has("ability-" + a))
         out.abilities[a] =
           d.get("ability-" + a) === "" ? NaN : Number(d.get("ability-" + a));
-    if (out.kind === "character") readCharacterChoices(d, out);
+    if (out.kind === "character") {
+      readCharacterChoices(d, out);
+      readSheet(form, out);
+    }
     return out;
   }
   find(id) {
@@ -156,6 +178,168 @@ export class ActorsUI {
     return [...(d?.characters || []), ...(d?.monsters || [])].find(
       (r) => r.id === id,
     );
+  }
+  bindSheetControls(form, record, onDraft) {
+    const update = () => {
+      const next = this.readForm(form, record);
+      onDraft(next);
+      updateSheetOutputs(form, next);
+      return next;
+    };
+    form
+      .querySelectorAll("[data-sheet-live]")
+      .forEach((el) => (el.oninput = update));
+    form.querySelectorAll("[data-sheet-refresh]").forEach(
+      (el) =>
+        (el.onchange = () => {
+          const next = update();
+          if (
+            el.name === "score-mode" &&
+            next.scoreSetup.mode === "point-buy"
+          ) {
+            next.scoreSetup.base = Object.fromEntries(
+              scoreAbilities.map((a) => [a, 8]),
+            );
+            next.scoreSetup.applySpecies = true;
+            syncScores(next);
+          }
+          const scoreHost = form.querySelector("[data-score-editor]");
+          if (scoreHost) scoreHost.outerHTML = renderScores(next, this.esc);
+          const saveHost = form.querySelector("[data-save-editor]");
+          if (saveHost) saveHost.outerHTML = renderSaves(next, this.esc);
+          onDraft(next);
+          this.bindSheetControls(form, next, onDraft);
+          const status = form.querySelector(".actor-save-state");
+          if (status) status.textContent = "Unsaved";
+        }),
+    );
+    form
+      .querySelectorAll("[data-load-equipment]")
+      .forEach(
+        (b) =>
+          (b.onclick = () =>
+            this.loadEquipment(
+              this.readForm(form, record),
+              b.dataset.loadEquipment,
+            )),
+      );
+    form.querySelectorAll("[data-remove-inventory]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          const next = update();
+          next.inventory = (next.inventory || []).filter(
+            (i) => i.id !== b.dataset.removeInventory,
+          );
+          this.showEquipmentDraft(next);
+        }),
+    );
+    const add = form.querySelector("[data-add-inventory]");
+    if (add)
+      add.onclick = () => {
+        const next = update();
+        this.modal(
+          "Add item",
+          this.input("item", "Item", "") +
+            this.input("quantity", "Quantity", 1, "number", 1),
+          async (data) => {
+            const name = String(data.get("item")).trim();
+            if (!name) throw Error("Enter an item name.");
+            next.inventory = [
+              ...(next.inventory || []),
+              {
+                id: crypto.randomUUID(),
+                name,
+                quantity: Number(data.get("quantity")),
+                source: "manual",
+              },
+            ];
+            this.showEquipmentDraft(next);
+          },
+          "Add",
+        );
+      };
+  }
+  showEquipmentDraft(next) {
+    validateActor(next);
+    this.drafts.set(next.id, next);
+    this.render();
+    document
+      .querySelector(
+        '[data-edit-actor="' + next.id + '"] [data-equipment-section]',
+      )
+      ?.setAttribute("open", "");
+  }
+  loadEquipment(record, source) {
+    const text = equipmentText(record, source);
+    if (!text)
+      return this.notify(
+        "Choose a standard " +
+          source +
+          " first. Custom equipment can be added with Add item.",
+      );
+    const packages = equipmentPackages(text),
+      groups = [],
+      fixed = [];
+    if (!packages.length) {
+      const bullets = text
+        .split("\n")
+        .map((s) => s.trim())
+        .filter((s) => s.startsWith("•"));
+      if (bullets.length)
+        for (const bullet of bullets) {
+          const line = bullet.replace(/^•\s*/, "");
+          const options = [...line.matchAll(/\(([a-z])\)\s*/g)];
+          if (options.length)
+            groups.push(
+              options.map((m, i) =>
+                line
+                  .slice(
+                    m.index + m[0].length,
+                    options[i + 1]?.index ?? line.length,
+                  )
+                  .replace(/\s+or\s*$/, "")
+                  .trim(),
+              ),
+            );
+          else fixed.push(line);
+        }
+      else fixed.push(text);
+    }
+    let plan;
+    this.modal(
+      "Starting equipment",
+      `${packages.length ? `<label class="field">Package<select aria-label="Equipment package" name="package">${packages.map((p, i) => `<option value="${i}">${this.esc(p.name)}</option>`).join("")}</select></label>` : ""}${groups.map((g, i) => `<label class="field">Equipment choice ${i + 1}<select name="equipment-choice-${i}" aria-label="Equipment choice ${i + 1}">${g.map((v, n) => `<option value="${n}">${this.esc(v)}</option>`).join("")}</select></label>`).join("")}<div data-equipment-preview></div>`,
+      async (data) => {
+        const items = plan.items.map((item, i) => ({
+          ...item,
+          name: String(data.get("preview-name-" + i)).trim(),
+          quantity: Number(data.get("preview-qty-" + i)),
+        }));
+        const wallet = Object.fromEntries(
+          coins.map((c) => [c, Number(data.get("preview-coin-" + c))]),
+        );
+        this.showEquipmentDraft(
+          applyEquipment(record, source, { items, wallet }),
+        );
+      },
+      "Load",
+    );
+    const form = document.querySelector("#dialog form");
+    const preview = () => {
+      const selected = packages.length
+        ? packages[Number(form.elements.package.value)].text
+        : [
+            ...fixed,
+            ...groups.map(
+              (g, i) => g[Number(form.elements["equipment-choice-" + i].value)],
+            ),
+          ].join(", ");
+      plan = equipmentPlan(selected);
+      form.querySelector("[data-equipment-preview]").innerHTML =
+        `<div class="equipment-source">${this.esc(selected)}</div><div class="inventory-rows">${plan.items.map((item, i) => `<div class="inventory-row"><label class="field">Item<input name="preview-name-${i}" maxlength="500" value="${this.esc(item.name)}" required></label><label class="field">Qty<input name="preview-qty-${i}" type="number" min="1" max="1000000" step="1" value="${item.quantity}" required></label></div>`).join("")}</div><div class="currency-grid">${coins.map((c) => `<label class="field">${c.toUpperCase()}<input name="preview-coin-${c}" type="number" min="0" max="1000000000" step="1" value="${plan.wallet[c]}" required></label>`).join("")}</div>${record.equipmentGrants?.[source] ? "<small>Replaces the previous " + source + " equipment grant.</small>" : ""}`;
+    };
+    form.querySelectorAll("select").forEach((s) => (s.onchange = preview));
+    preview();
   }
   async commitDraft(id) {
     const projectId = this.projectId();
@@ -179,7 +363,7 @@ export class ActorsUI {
         (kind === "character"
           ? `<div data-create-character-options>${characterFields(defaults, this.esc)}</div>`
           : "") +
-        `<div class="actor-basic-grid">${this.input("maxHp", "Maximum HP", defaults.maxHp, "number", 1)}${this.input("ac", "AC", defaults.ac, "number", 0, 100)}</div><details class="actor-section"><summary>Ability modifiers</summary>${this.abilities(defaults.abilities)}</details>`,
+        `<div class="actor-basic-grid">${this.input("maxHp", "Maximum HP", defaults.maxHp, "number", 1)}${this.input("ac", "AC", defaults.ac, "number", 0, 100)}</div>${kind === "character" ? `<details class="actor-section" open><summary>Ability scores</summary>${renderScores(defaults, this.esc)}</details>` : `<details class="actor-section"><summary>Ability modifiers</summary>${this.abilities(defaults.abilities)}</details>`}`,
       async (data) => {
         const abilities = Object.fromEntries(
           abilityNames.map((a) => [a, Number(data.get("ability-" + a))]),
@@ -189,12 +373,13 @@ export class ActorsUI {
             name: data.get("name").trim(),
             maxHp: Number(data.get("maxHp")),
             ac: Number(data.get("ac")),
-            abilities,
+            ...(kind === "monster" ? { abilities } : {}),
           }),
         );
         if (kind === "character") {
           r.level = Number(data.get("level"));
           readCharacterChoices(data, r);
+          readSheet(document.querySelector("#dialog form"), r);
           validateActor(r);
         }
         this.records(kind).push(r);
@@ -214,10 +399,14 @@ export class ActorsUI {
           (next) => {
             form.querySelector("[data-create-character-options]").innerHTML =
               characterFields(next, this.esc);
+            const scoreHost = form.querySelector("[data-score-editor]");
+            if (scoreHost) scoreHost.outerHTML = renderScores(next, this.esc);
+            this.bindSheetControls(form, next, () => {});
             bind();
           },
         );
       bind();
+      this.bindSheetControls(form, defaults, () => {});
     }
   }
   async presets(edition) {
@@ -352,7 +541,34 @@ export class ActorsUI {
     return `<section class="encounter-panel"><div class="actor-toolbar"><button class="primary" data-pick-participant>＋ Participant</button></div><div class="encounter-drop" data-encounter-drop><span>Drop characters / monsters</span></div><div class="encounter-columns"><div class="participant-list">${data.participants.map((p) => `<button class="participant-row ${p.id === selected?.id ? "selected" : ""}" data-participant="${p.id}"><span>${esc(p.name)} <small>#${p.instance}</small></span><strong>${p.hp} / ${p.maxHp}</strong></button>`).join("")}</div><div class="participant-editor">${
       selected
         ? `<div class="participant-heading"><h2>${esc(selected.name)} <small>#${selected.instance}</small></h2><button class="text-btn danger" data-remove-participant="${selected.id}">Remove</button></div><div class="health-display ${selected.hp === 0 ? "zero-hp" : ""}"><output aria-label="Current health">${selected.hp} / ${selected.maxHp}</output>${selected.tempHp ? `<span>Temp ${selected.tempHp}</span>` : ""}</div><div class="health-controls"><label class="field">HP amount<input type="number" data-hp-amount="${selected.id}" min="0" max="1000000" step="1" value="${this.amounts.get(selected.id) ?? 1}" required></label><button class="secondary" data-health="heal">Add HP</button><button class="primary" data-health="damage">Damage</button>${this.undo.has(selected.id) ? '<button class="text-btn" data-undo-health>Undo</button>' : ""}</div><form data-participant-stats="${selected.id}"><details class="actor-section"><summary>Combat stats</summary><div class="actor-basic-grid">${this.input("hp", "Current HP", selected.hp, "number")}${this.input("maxHp", "Maximum HP", selected.maxHp, "number", 1)}${this.input("tempHp", "Temporary HP", selected.tempHp, "number")}${this.input("ac", "AC", selected.ac, "number", 0, 100)}${this.input("initiative", "Initiative", selected.initiative, "number", -100, 100)}</div>${this.input("conditions", "Conditions", selected.conditions)}<button type="submit" class="secondary">Save stats</button></details></form><details class="actor-section"><summary>Character / monster details</summary><div class="participant-modifiers">${abilityNames.map((a) => `<span>${a} ${selected.snapshot.abilities[a] >= 0 ? "+" : ""}${selected.snapshot.abilities[a]}</span>`).join("")}</div>${[
-            ["Saving throws", selected.snapshot.saves],
+            [
+              "Saving throws",
+              selected.snapshot.kind === "character"
+                ? Object.entries(savingThrows(selected.snapshot))
+                    .map(([a, v]) => a + " " + signed(v.total))
+                    .join(" � ") +
+                  (selected.snapshot.saves
+                    ? "\n" + selected.snapshot.saves
+                    : "")
+                : selected.snapshot.saves,
+            ],
+            [
+              "Equipment",
+              (selected.snapshot.inventory || [])
+                .map((i) => i.quantity + " � " + i.name)
+                .join("\n"),
+            ],
+            [
+              "Currency",
+              selected.snapshot.wallet
+                ? coins
+                    .map(
+                      (c) =>
+                        selected.snapshot.wallet[c] + " " + c.toUpperCase(),
+                    )
+                    .join(" � ")
+                : "",
+            ],
             ["Skills", selected.snapshot.skills],
             ["Weapons / attacks", selected.snapshot.attacks],
 
@@ -417,7 +633,9 @@ export class ActorsUI {
     document.querySelectorAll("[data-edit-actor]").forEach((form) => {
       const record = this.find(form.dataset.editActor);
       form.oninput = () => {
-        this.drafts.set(record.id, this.readForm(form, record));
+        const next = this.readForm(form, record);
+        this.drafts.set(record.id, next);
+        if (record.kind === "character") updateSheetOutputs(form, next);
         form.querySelector(".actor-save-state").textContent = "Unsaved";
       };
       if (record.kind === "character")
@@ -444,12 +662,17 @@ export class ActorsUI {
                 .querySelectorAll("[data-feature-id]")
                 .forEach((d) => (d.open = open.has(d.dataset.featureId)));
               form.querySelector(".actor-save-state").textContent = "Unsaved";
+              updateSheetOutputs(form, next);
               bindFeatures();
             };
             input.onchange = update;
           });
       };
       bindFeatures();
+      if (record.kind === "character")
+        this.bindSheetControls(form, record, (next) =>
+          this.drafts.set(record.id, next),
+        );
       form.onsubmit = async (e) => {
         e.preventDefault();
         try {

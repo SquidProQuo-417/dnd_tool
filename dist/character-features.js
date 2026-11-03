@@ -94,6 +94,10 @@ const headings = [
 ];
 const escapeRE = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function splitTraits(text) {
+  text = text.replace(
+    /\s+As (?:a|an) [^.!?]+?, you have (?:these|the following) special traits\./g,
+    ".",
+  );
   text = text.replace(/\s+(Size|Speed):/g, ". $1:");
   const expression = new RegExp(
     "(?:^|(?<=[.?!])\\s+)(" +
@@ -175,11 +179,6 @@ export function featureChoices(r) {
         ) || 1;
       add("class", "tools", "Tool / instrument", [], count, { free: true });
     }
-    if (
-      cls.features.some((f) => f.title === "Equipment") ||
-      /Starting Equipment/.test(cls.core)
-    )
-      add("class", "equipment", "Starting equipment", [], 1, { free: true });
     for (const f of cls.features.filter((f) => f.level <= r.level)) {
       const title = plainTitle(f.title);
       if (title === "Fighting Style" || title === "Additional Fighting Style") {
@@ -203,6 +202,9 @@ export function featureChoices(r) {
         add("class", title, title, ["Magician", "Warden"]);
       else if (
         /choice|choose|select/i.test(f.text) &&
+        /Subclass|Ability Score Improvement|Metamagic|Invocation|Weapon Mastery|Spellcasting|Pact|Expertise|Favored Enemy|Natural Explorer|Maneuver/.test(
+          title,
+        ) &&
         !["Equipment", "Proficiencies"].includes(title) &&
         !f.path?.includes("Fighting Style")
       ) {
@@ -304,8 +306,7 @@ export function featureChoices(r) {
       }
     } else {
       const subraces = species.features.filter(
-        (f) =>
-          f.path?.length === 3 && !/Traits|Draconic Ancestry/.test(f.title),
+        (f) => f.path?.length >= 3 && !/Traits|Draconic Ancestry/.test(f.title),
       );
       if (subraces.length)
         add(
@@ -396,7 +397,7 @@ export function characterFeatureCards(r) {
       // Subrace traits belong to the corresponding choice, not to every member of the species.
       if (
         (r.rulesEdition || "2024") === "2014" &&
-        feature.path?.length === 3 &&
+        feature.path?.length >= 3 &&
         !/Traits|Draconic Ancestry/.test(feature.title)
       )
         continue;
@@ -405,6 +406,35 @@ export function characterFeatureCards(r) {
         ...traits.map((t) => ({ ...t, scope: "species", page: feature.page })),
       );
     }
+  const speciesCards = cards.filter((c) => c.scope === "species");
+  if (speciesCards.length > 1) {
+    const allShort =
+      speciesCards.every((c) => c.text.length < 400) &&
+      speciesCards.reduce((n, c) => n + c.text.length, 0) < 1600;
+    const merge = allShort
+      ? speciesCards
+      : speciesCards.filter((c) =>
+          [
+            "Overview",
+            "Creature Type",
+            "Size",
+            "Speed",
+            "Age",
+            "Alignment",
+          ].includes(c.title),
+        );
+    if (merge.length > 1) {
+      const rest = cards.filter((c) => !merge.includes(c));
+      rest.push({
+        scope: "species",
+        title: allShort ? r.ancestry + " traits" : "Species basics",
+        facts: merge,
+        page: merge[0].page,
+        text: merge.map((c) => c.title + ": " + c.text).join("\n"),
+      });
+      return rest;
+    }
+  }
   return cards;
 }
 
@@ -434,7 +464,7 @@ export function renderCharacterFeatures(r, esc, { readonly = false } = {}) {
     .map((scope) => {
       const list = cards.filter((c) => c.scope === scope);
       return list.length
-        ? `<div class="feature-group"><h3>${esc(scope === "class" ? r.className : r.ancestry)}</h3>${list.map((f, i) => card(f.title, renderReference(f.text, esc, { edition: r.rulesEdition || "2024", page: f.page, level: r.level }) + `<a class="reference-source" href="./rules/srd-${r.rulesEdition || "2024"}.pdf#page=${f.page}" target="_blank" rel="noopener">Source · p. ${f.page} ↗</a>`, scope + ":" + i, f.level ? "Level " + f.level : "")).join("")}</div>`
+        ? `<div class="feature-group"><h3>${esc(scope === "class" ? r.className : r.ancestry)}</h3>${list.map((f, i) => card(f.title, (f.facts ? `<dl class="reference-facts">${f.facts.map((t) => `<div><dt>${esc(t.title)}</dt><dd>${renderReference(t.text, esc, { edition: r.rulesEdition || "2024", page: f.page })}</dd></div>`).join("")}</dl>` : renderReference(f.text, esc, { edition: r.rulesEdition || "2024", page: f.page, level: r.level })) + `<a class="reference-source" href="./rules/srd-${r.rulesEdition || "2024"}.pdf#page=${f.page}" target="_blank" rel="noopener">Source · p. ${f.page} ↗</a>`, scope + ":" + i, f.level && !/^Level /.test(f.title) ? "Level " + f.level : "")).join("")}</div>`
         : "";
     })
     .join("")}</div>`;

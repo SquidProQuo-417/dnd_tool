@@ -1,6 +1,6 @@
 # Characters, monsters and encounter records
 
-Projects start without records. Characters and Monsters have quick creators with name, maximum HP, AC and ability modifiers. Records expose speed, initiative modifier, saving throws, skills, attacks, features and notes. Characters also have level, class and species/ancestry. Edits use Save, with an Unsaved indicator; drafts survive panel rearrangement in the running session.
+Projects start without records. Characters have a quick creator with name, maximum HP, AC and ability scores; monsters retain modifier entry. Records expose speed, initiative modifier, saving throws, skills, attacks, features and notes. Characters also have level, class, species/ancestry and background. Edits use Save, with an Unsaved indicator; drafts survive panel rearrangement in the running session.
 
 PDF sheets can be attached (15 MB limit), stored in IndexedDB, viewed beside fields on wide panels, or opened separately. Entry from the PDF is manual; there is no PDF field extraction or OCR yet. Bytes are checked for a PDF header and stored as application/pdf.
 
@@ -8,7 +8,21 @@ PDF sheets can be attached (15 MB limit), stored in IndexedDB, viewed beside fie
 
 Creation and editing include edition-specific Class and Species / ancestry dropdowns: all 12 SRD classes and 9 SRD species per edition. Choose Custom to enter homebrew names. Class / species features are grouped into individually expandable cards. Class features update with level or edition. Choices have separate cards with completion counts: class skills, fighting styles, species lineages, size, ancestry, extra languages and Human origin feats. Selecting Skilled or Magic Initiate reveals their additional selections. Custom entries are available; choices without a specialized picker have a labeled text field. Encounter snapshots retain these choices and display them without editing controls.
 
-Custom features, notes, HP, AC and ability modifiers remain manually editable and are not overwritten by these choices. Selections are recorded, not applied to numeric stats. Spell selections and choices without a specialized picker use text entry; this is not a complete character-sheet calculator or prerequisite validator. The class/species reference is regenerated from selections; write custom additions in Features / source stat block.
+Custom features, notes, HP and AC remain manually editable. Spell selections and choices without a specialized picker use text entry; this is not a complete character-sheet calculator or prerequisite validator. The class/species reference is regenerated from selections; write custom additions in Features / source stat block. Short species facts are combined into one card; other species group their basic facts together. All collapsed card headers have a consistent height.
+
+## Ability scores and saving throws
+
+New characters start with 27-point buying: base scores 8–15, costs 0/1/2/3/4/5/7/9. Spending fewer than 27 is allowed; overspending cannot be saved. Manual scores are also available. Each tile shows the final score, its modifier, an editable base and a source breakdown. The modifier is floor((score − 10) / 2).
+
+2014 species and selected SRD subraces apply their fixed increases when Apply species bonuses is enabled; Half-Elf additional increases follow its two selections. In 2024 the selected background allows +2/+1 or three +1 increases among its listed abilities. SRD background coverage is Acolyte in 2014 and Acolyte, Criminal, Sage and Soldier in 2024; custom backgrounds allow choosing abilities manually. Class, feat and other increases are explicitly editable contributions, not inferred from free-text feature notes. No automatic feat, background skill, armor, HP or attack calculation is implied.
+
+Existing records without score data keep their original modifiers. Their editable manual scores are inferred from those modifiers, with automatic species increases disabled to avoid applying bonuses twice. Choosing Point buy restarts the base scores at 8. Changing class or edition updates automatic saving throw proficiencies. Saves use the current modifier plus the level-based proficiency bonus when proficient, plus explicit additional bonuses. Monk level 14 and Rogue level 15 saving throw proficiencies are included. Custom proficiency selections and additional bonuses cover feats, items, multiclassing and conditional effects. Previous free-text saves remain as notes.
+
+## Equipment and currency
+
+Equipment has separate loaders for class and background. The preview offers 2024 package choices or 2014 equipment alternatives and editable item names, quantities and coins. Open-ended choices such as a musical instrument can be resolved in that preview. Packs remain inventory items; their contents are not unpacked and weapon statistics are not automatically created. Manual Add item, quantity edits and removal are available.
+
+Loading the same source again replaces its tagged inventory and reconciles its previous coin grant, preserving manual items and the other source. If replacing a grant would make a denomination negative, the operation is rejected without changing the record. Equipment and wallet values are saved with the character and copied into encounter snapshots. Currency tracks PP, GP, EP, SP and CP without automatically converting denominations, plus a GP-equivalent total.
 
 Tables use headers, separated rows and horizontal scrolling within their cards. Twenty-level progression tables show the current level first, with All levels to expand the complete table. Core class traits use labeled facts instead of extracted tab-separated text. Ambiguous tables link to the source PDF instead of displaying misaligned rows. Generator corrections relocate the 2024 Tiefling legacy table from Human and Elf spells from Gnome, normalize the lineage and Monk progression tables, and reunite the 2014 Monk proficiencies and Martial Arts text split across PDF columns.
 
